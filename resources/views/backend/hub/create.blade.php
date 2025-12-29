@@ -179,7 +179,7 @@
                                     <input type="checkbox" class="custom-control-input" id="include_gst"
                                         name="include_gst" {{ old('include_gst') ? 'checked' : '' }}>
                                     <label class="custom-control-label" for="include_gst">
-                                        Include GST (CGST & SGST)
+                                        Include GST (CGST & SGST & IGST)
                                     </label>
                                 </div>
                             </div>
@@ -201,6 +201,16 @@
                                             class="form-control @error('sgst') is-invalid @enderror"
                                             placeholder="Enter SGST %" value="{{ old('sgst', '0') }}">
                                         @error('sgst')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+
+                                    <div class="form-group col-md-4">
+                                        <label for="igst">IGST (%) <span class="text-danger">*</span></label>
+                                        <input type="number" step="0.01" id="igst" name="igst"
+                                            class="form-control @error('igst') is-invalid @enderror"
+                                            placeholder="Enter IGST %" value="{{ old('igst','0') }}">
+                                        @error('igst')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
@@ -364,6 +374,5 @@
     });
 
 
-        const stateCityData = @json(json_decode(file_get_contents(storage_path('app/data/states+cities.json')), true));
-    
+    const stateCityData = @json(json_decode(file_get_contents(storage_path('app/data/states+cities.json')), true));
 </script>

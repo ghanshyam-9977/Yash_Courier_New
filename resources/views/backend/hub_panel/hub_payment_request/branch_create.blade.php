@@ -144,6 +144,11 @@
                                             class="custom-control-input" required>
                                         <label class="custom-control-label" for="item_parcel">Parcel</label>
                                     </div>
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" id="item_urgent" name="item_type" value="urgent"
+                                            class="custom-control-input" required>
+                                        <label class="custom-control-label" for="item_urgent">Urgent</label>
+                                    </div>
                                 </div>
                                 @error('item_type')
                                     <small class="text-danger">{{ $message }}</small>
@@ -179,32 +184,37 @@
                             </div>
 
                             <!-- City & State Row -->
+                            <!-- City & State Row -->
                             <div class="row" id="location-row" style="display:none;">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="city">City <span class="text-danger">*</span></label>
-                                        <input type="text" id="city" name="city"
-                                            class="form-control @error('city') is-invalid @enderror" placeholder="City"
-                                            required readonly>
+                                        <input type="text" id="city-autocomplete"
+                                            class="form-control @error('city') is-invalid @enderror"
+                                            placeholder="Type city name (e.g. Indore, Delhi...)" autocomplete="off"
+                                            value="{{ old('city') }}" required>
+
+                                        <input type="hidden" name="city" id="city-hidden">
+                                        <input type="hidden" name="state" id="state-hidden">
+
+                                        <small class="form-text text-muted">Start typing to see suggestions...</small>
+
                                         @error('city')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="state">State <span class="text-danger">*</span></label>
-                                        <input type="text" id="state" name="state"
-                                            class="form-control @error('state') is-invalid @enderror" placeholder="State"
-                                            required readonly>
                                         @error('state')
                                             <small class="text-danger">{{ $message }}</small>
                                         @enderror
                                     </div>
                                 </div>
-                            </div>
 
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="state-display">State <span class="text-danger">*</span></label>
+                                        <input type="text" id="state-display" class="form-control" readonly>
+                                        <input type="hidden" name="state" id="state-hidden-value">
+                                    </div>
+                                </div>
+                            </div>
                             <!-- Weight & Quantity Row -->
                             <div class="row" id="weight-quantity-row" style="display:none;">
                                 <div class="col-md-6">
@@ -259,7 +269,7 @@
                                     <input type="checkbox" class="custom-control-input" id="include_gst"
                                         name="include_gst" {{ old('include_gst') ? 'checked' : '' }}>
                                     <label class="custom-control-label" for="include_gst">
-                                        Include GST (CGST & SGST)
+                                        Include GST (CGST & SGST & IGST)
                                     </label>
                                 </div>
                             </div>
@@ -288,6 +298,16 @@
                                     </div>
                                 </div>
 
+                                <div class="form-group col-md-4">
+                                    <label for="igst">IGST (%) <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" id="igst" name="igst"
+                                        class="form-control @error('igst') is-invalid @enderror"
+                                        placeholder="Enter IGST %" value="{{ old('igst') }}">
+                                    @error('igst')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+
                                 <div class="form-group">
                                     <label for="total_with_gst">Total Amount with GST</label>
                                     <input type="text" id="total_with_gst" class="form-control" readonly>
@@ -306,6 +326,62 @@
                                 @enderror
                             </div>
 
+                            <!-- COD Section (Only for OUT) -->
+                            <div class="form-group" id="cod-container" style="display:none;">
+                                <div class="custom-control custom-checkbox mb-3">
+                                    <input type="checkbox" class="custom-control-input" id="is_cod" name="is_cod"
+                                        {{ old('is_cod') ? 'checked' : '' }}>
+                                    <label class="custom-control-label" for="is_cod">
+                                        This is a COD (Cash on Delivery) Consignment
+                                    </label>
+                                </div>
+
+                                <div id="cod-fields" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="cod_amount">COD Amount to Collect <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="number" step="0.01" id="cod_amount" name="cod_amount"
+                                                    class="form-control @error('cod_amount') is-invalid @enderror"
+                                                    placeholder="e.g. 2500.00" value="{{ old('cod_amount') }}">
+                                                @error('cod_amount')
+                                                    <small class="text-danger">{{ $message }}</small>
+                                                @enderror
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="cod_payment_mode">Preferred Payment Mode (Optional)</label>
+                                                <select id="cod_payment_mode" name="cod_payment_mode"
+                                                    class="form-control">
+                                                    <option value="">Any Mode</option>
+                                                    <option value="cash"
+                                                        {{ old('cod_payment_mode') == 'cash' ? 'selected' : '' }}>Cash Only
+                                                    </option>
+                                                    <option value="upi"
+                                                        {{ old('cod_payment_mode') == 'upi' ? 'selected' : '' }}>UPI
+                                                    </option>
+                                                    <option value="card"
+                                                        {{ old('cod_payment_mode') == 'card' ? 'selected' : '' }}>Card
+                                                    </option>
+                                                    <option value="online"
+                                                        {{ old('cod_payment_mode') == 'online' ? 'selected' : '' }}>Online
+                                                        Transfer</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="cod_remarks">COD Remarks (Optional)</label>
+                                        <textarea id="cod_remarks" name="cod_remarks" rows="2" class="form-control"
+                                            placeholder="e.g. Collect from Mr. Rajesh Kumar, Mobile: 98xxxxxxxx">{{ old('cod_remarks') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="text-right mt-4">
                                 <button type="submit" class="btn btn-success px-4">{{ __('Submit') }}</button>
                             </div>
@@ -320,6 +396,62 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+
+            // COD Checkbox Toggle
+            $('#is_cod').on('change', function() {
+                if (this.checked) {
+                    $('#cod-fields').slideDown();
+                    $('#cod_amount').attr('required', 'required');
+                } else {
+                    $('#cod-fields').slideUp();
+                    $('#cod_amount').removeAttr('required').val('');
+                    $('#cod_payment_mode').val('');
+                    $('#cod_remarks').val('');
+                }
+                updateDescriptionWithCOD(); // Description update
+            });
+
+            // Update description when COD fields change
+            $('#cod_amount, #cod_payment_mode, #cod_remarks').on('input change', updateDescriptionWithCOD);
+
+            // Function to auto-append COD details in description
+            function updateDescriptionWithCOD() {
+                if (!$('#is_cod').is(':checked')) {
+                    // Remove COD line if checkbox unchecked
+                    let desc = $('#description').val().replace(/\n?COD Amount:.*$/i, '').trim();
+                    $('#description').val(desc);
+                    return;
+                }
+
+                const codAmount = $('#cod_amount').val().trim();
+                if (!codAmount) return;
+
+                let codText = `COD Amount: ₹${parseFloat(codAmount).toFixed(2)}`;
+
+                const mode = $('#cod_payment_mode').val();
+                if (mode && mode !== '') {
+                    const modeText = mode === 'cash' ? 'Cash' : mode.toUpperCase();
+                    codText += ` | Mode: ${modeText}`;
+                }
+
+                const remarks = $('#cod_remarks').val().trim();
+                if (remarks) {
+                    codText += ` | Remarks: ${remarks}`;
+                }
+
+                let currentDesc = $('#description').val().trim();
+                // Remove previous COD line if exists
+                currentDesc = currentDesc.replace(/\n?COD Amount:.*$/i, '').trim();
+
+                // Add new COD line
+                if (currentDesc) {
+                    currentDesc += '\n' + codText;
+                } else {
+                    currentDesc = codText;
+                }
+
+                $('#description').val(currentDesc);
+            }
             let currentRequestType = '';
 
             // Request Type Change Handler
@@ -352,6 +484,10 @@
                 $('#amount-container').show();
                 $('#gst-checkbox-container').show();
                 $('#description-container').show();
+
+                $('#city').prop('readonly', false).val('{{ old('city') }}');
+                $('#state').prop('readonly', true).val('{{ old('state') }}');
+                $('#cod-container').show(); // <-- यह लाइन जोड़ें
             }
 
             // IN Request Flow
@@ -375,33 +511,118 @@
                 $('#amount-container').show();
                 $('#gst-checkbox-container').show();
                 $('#description-container').show();
+                $('#cod-container').show();
             }
 
             // ========== OUT REQUEST HANDLERS ==========
 
             // From Branch Change (OUT)
-            $('#from_branch_select').on('change', function() {
-                const selectedOption = $(this).find('option:selected');
-                const branchId = $(this).val();
-                const city = selectedOption.data('city');
-                const state = selectedOption.data('state');
+            // $('#from_branch_select').on('change', function() {
+            //     const selectedOption = $(this).find('option:selected');
+            //     const branchId = $(this).val();
+            //     const city = selectedOption.data('city');
+            //     const state = selectedOption.data('state');
 
-                if (currentRequestType === 'out' && branchId) {
-                    // Auto-fill city and state
-                    if (city) $('#city').val(city);
-                    if (state) $('#state').val(state);
+            //     if (currentRequestType === 'out' && branchId) {
+            //         // Auto-fill city and state
+            //         if (city) $('#city').val(city);
+            //         if (state) $('#state').val(state);
 
-                    // Generate tracking number
-                    generateTrackingNumber();
+            //         // Generate tracking number
+            //         generateTrackingNumber();
 
-                    // Fetch rates if all required fields are selected
-                    const itemType = $('input[name="item_type"]:checked').val();
-                    const transportType = $('#transport_type').val();
+            //         // Fetch rates if all required fields are selected
+            //         const itemType = $('input[name="item_type"]:checked').val();
+            //         const transportType = $('#transport_type').val();
 
-                    if (itemType && transportType) {
-                        fetchOutRates(branchId, itemType, transportType);
-                    }
+            //         if (itemType && transportType) {
+            //             fetchOutRates(branchId, itemType, transportType);
+            //         }
+            //     }
+            // });
+
+
+            // City input par state fetch karne ke liye
+            // City input handler - Updated for multiple states
+            let cityTimeout;
+            $('#city').on('input blur', function() {
+                clearTimeout(cityTimeout);
+                const cityName = $(this).val().trim();
+
+                if (cityName.length < 3) {
+                    convertStateToInput();
+                    $('#state').val('');
+                    return;
                 }
+
+                cityTimeout = setTimeout(function() {
+                    $.ajax({
+                        url: "{{ route('get.state.by.city') }}",
+                        type: "GET",
+                        data: {
+                            city: cityName
+                        },
+                        success: function(response) {
+                            if (response.success && response.state) {
+                                convertStateToInput();
+                                $('#state').val(response.state);
+                                // showNotification('success', 'State auto-filled: ' +
+                                //     response.state);
+                            } else {
+                                convertStateToInput();
+                                $('#state').val('');
+                                showNotification('warning',
+                                    'No state found for this city.');
+                            }
+                        },
+                        error: function() {
+                            convertStateToInput();
+                            $('#state').val('');
+                            showNotification('error', 'Failed to fetch state.');
+                        }
+                    });
+                }, 800);
+            });
+
+            // Dropdown functions hata do ya comment kar do (kyunki ab need nahi)
+
+            // Convert state field to dropdown
+            function convertStateToDropdown(states, cityName) {
+                const $stateGroup = $('#state').parent();
+
+                // Remove existing dropdown if any
+                $('#state-dropdown').remove();
+
+                let options = '<option value="">-- Select State --</option>';
+                states.forEach(function(state) {
+                    options += `<option value="${state}">${state}</option>`;
+                });
+
+                const dropdown = `
+        <select id="state-dropdown" name="state" class="form-control" required>
+            ${options}
+        </select>
+        <small class="form-text text-muted">Multiple states possible for ${cityName}</small>
+    `;
+
+                // Replace the input with dropdown
+                $('#state').hide();
+                $stateGroup.append(dropdown);
+            }
+
+            // Convert back to normal readonly input (or editable if needed)
+            function convertStateToInput() {
+                $('#state-dropdown').remove();
+                $('#state').show();
+            }
+
+            // On page load - ensure correct state (for old input or validation error)
+            $(document).ready(function() {
+                // If old state exists and city exists, try to match
+                @if (old('city') && old('state'))
+                    $('#city').val('{{ old('city') }}');
+                    $('#state').val('{{ old('state') }}');
+                @endif
             });
 
             // Item Type Change (OUT)
@@ -587,6 +808,18 @@
                                 $('#gst-fields').hide();
                                 $('#cgst, #sgst').val('').removeAttr('required');
                             }
+                            if (response.data.is_cod) {
+                                $('#is_cod').prop('checked', true);
+                                $('#cod-fields').show();
+                                $('#cod_amount').val(response.data.cod_amount || '').attr('required',
+                                    'required');
+                                $('#cod_payment_mode').val(response.data.cod_payment_mode || '');
+                                $('#cod_remarks').val(response.data.cod_remarks || '');
+                                updateDescriptionWithCOD();
+                            } else {
+                                $('#is_cod').prop('checked', false);
+                                $('#cod-fields').hide();
+                            }
 
                             showNotification('success',
                                 'All data loaded successfully from tracking number!');
@@ -652,6 +885,12 @@
                 $('#gst-fields').hide();
                 $('#cgst, #sgst, #total_with_gst').val('');
                 $('#city, #state').prop('readonly', false);
+                $('#cod-container').hide();
+                $('#is_cod').prop('checked', false);
+                $('#cod-fields').hide();
+                $('#cod_amount, #cod_remarks').val('');
+                $('#cod_payment_mode').val('');
+                $('#cod_amount').removeAttr('required');
             }
 
             // Show notification helper
@@ -674,6 +913,133 @@
                 $('#gst-fields').show();
                 $('#cgst, #sgst').attr('required', 'required');
                 calculateGST();
+            @endif
+        });
+    </script>
+@endpush
+@push('styles')
+    <style>
+        .city-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ced4da;
+            border-top: none;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .city-suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .city-suggestion-item:hover,
+        .city-suggestion-item.active {
+            background: #007bff;
+            color: white;
+        }
+    </style>
+@endpush
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            let suggestionIndex = -1;
+            let suggestions = [];
+
+            const $input = $('#city-autocomplete');
+            const $suggestionsBox = $('<div class="city-suggestions"></div>');
+            $input.parent().css('position', 'relative');
+            $input.after($suggestionsBox);
+
+            $input.on('input keydown', function(e) {
+                const query = $(this).val().trim();
+
+                // Arrow keys
+                if (e.key === 'ArrowDown') {
+                    suggestionIndex = Math.min(suggestionIndex + 1, suggestions.length - 1);
+                    updateActive();
+                    return;
+                }
+                if (e.key === 'ArrowUp') {
+                    suggestionIndex = Math.max(suggestionIndex - 1, -1);
+                    updateActive();
+                    return;
+                }
+                if (e.key === 'Enter') {
+                    if (suggestionIndex >= 0) {
+                        selectSuggestion(suggestions[suggestionIndex]);
+                    }
+                    $suggestionsBox.hide();
+                    return;
+                }
+
+                if (query.length < 2) {
+                    $suggestionsBox.hide();
+                    return;
+                }
+
+                $.get("{{ route('get.cities.suggestions') }}", {
+                        q: query
+                    })
+                    .done(function(response) {
+                        suggestions = response.results;
+                        suggestionIndex = -1;
+
+                        if (suggestions.length === 0) {
+                            $suggestionsBox.hide();
+                            return;
+                        }
+
+                        $suggestionsBox.empty();
+                        suggestions.forEach(function(item, index) {
+                            const div = $('<div class="city-suggestion-item">' + item.label +
+                                '</div>');
+                            div.on('click', function() {
+                                selectSuggestion(item);
+                            });
+                            $suggestionsBox.append(div);
+                        });
+
+                        $suggestionsBox.show();
+                        updateActive();
+                    });
+            });
+
+            function updateActive() {
+                $suggestionsBox.find('.city-suggestion-item').removeClass('active');
+                if (suggestionIndex >= 0) {
+                    $suggestionsBox.find('.city-suggestion-item').eq(suggestionIndex).addClass('active');
+                }
+            }
+
+            function selectSuggestion(item) {
+                $('#city-autocomplete').val(item.city);
+                $('#city-hidden').val(item.city);
+                $('#state-display').val(item.state);
+                $('#state-hidden-value').val(item.state);
+                $suggestionsBox.hide();
+            }
+
+            // Click outside to hide
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest($input.parent()).length) {
+                    $suggestionsBox.hide();
+                }
+            });
+
+            // On page load - if old values exist
+            @if (old('city') && old('state'))
+                $('#city-autocomplete').val('{{ old('city') }}');
+                $('#state-display').val('{{ old('state') }}');
+                $('#city-hidden').val('{{ old('city') }}');
+                $('#state-hidden-value').val('{{ old('state') }}');
             @endif
         });
     </script>

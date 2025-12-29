@@ -144,6 +144,12 @@
                                         <th>{{ __('levels.contact_no') }}</th>
                                         <th>{{ __('levels.city') }}</th>
                                         <th>{{ __('levels.pincode') }}</th>
+                                        <th>{{ __('Item Type') }}</th>
+                                        <th>{{ __('Transport') }}</th>
+                                        <th>{{ __('Unit') }}</th>
+                                        <th>{{ __('Qty') }}</th>
+                                        <th>{{ __('Rate (₹)') }}</th>
+                                        <th>{{ __('GST') }}</th>
                                         <th>{{ __('levels.status') }}</th>
                                         @if (hasPermission('hub_update') == true ||
                                                 hasPermission('hub_delete') == true ||
@@ -167,6 +173,29 @@
                                             <td>{{ $hub->phone }}</td>
                                             <td>{{ $hub->city }}</td>
                                             <td>{{ $hub->pincode }}</td>
+                                            <td>{{ ucfirst($hub->item_type) }}</td>
+
+                                            <td>
+                                                @if ($hub->transport_type == 'by_air')
+                                                    By Air
+                                                @else
+                                                    By Road
+                                                @endif
+                                            </td>
+
+                                            <td>{{ strtoupper($hub->unit) }}</td>
+
+                                            <td>{{ $hub->quantity }}</td>
+
+                                            <td>₹ {{ number_format($hub->rate, 2) }}</td>
+
+                                            <td>
+                                                @if ($hub->include_gst)
+                                                    {{ $hub->cgst + $hub->sgst + $hub->igst }}%
+                                                @else
+                                                    N/A
+                                                @endif
+                                            </td>
                                             <td>
                                                 @if ($hub->status == \App\Enums\Status::ACTIVE)
                                                     <span

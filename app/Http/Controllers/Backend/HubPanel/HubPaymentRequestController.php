@@ -15,7 +15,7 @@ use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Support\Facades\Log;
 
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Storage;
 
 class HubPaymentRequestController extends Controller
 {
@@ -115,13 +115,35 @@ class HubPaymentRequestController extends Controller
         $originalData = $payment->getOriginal();
 
         $result = $payment->update([
-            'name' => $request['name'],
-            'phone' => $request['phone'],
-            'city' => $request['city'],
-            'contact_person' => $request['contact_person'],
-            'pincode' => $request['pincode'],
-            'address' => $request['address'],
+            // Basic Info
+            'name'            => $request->name,
+            'phone'           => $request->phone,
+            'state'           => $request->state,
+            'city'            => $request->city,
+            'contact_person'  => $request->contact_person,
+            'pincode'         => $request->pincode,
+            'address'         => $request->address,
+
+            // Item & Transport
+            'item_type'       => $request->item_type,
+            'transport_type'  => $request->transport_type,
+
+            // Weight & Rate
+            'unit'            => $request->unit,
+            'quantity'        => $request->quantity,
+            'rate'            => $request->rate,
+
+            // GST
+            'include_gst'     => $request->has('include_gst') ? 1 : 0,
+            'cgst'            => $request->include_gst ? $request->cgst : 0,
+            'sgst'            => $request->include_gst ? $request->sgst : 0,
+            'igst'            => $request->include_gst ? $request->igst : 0,
+
+            // Extra
+            'description'     => $request->description,
+            'status'          => $request->status,
         ]);
+
 
         if ($result) {
             $payment->refresh(); // Reload the model to get updated data
@@ -173,7 +195,8 @@ class HubPaymentRequestController extends Controller
         $numericId = (int) $id;
         Log::info('Fetching branch payment for editing', ['id' => $numericId]);
 
-        $payment = BranchPaymentRequest::find($numericId);
+        // $payment = BranchPaymentRequest::find($numericId);
+        $payment = BranchPaymentRequest::with(['fromBranch', 'toBranch'])->findOrFail($id);
 
         if (!$payment) {
             Log::warning('Branch payment not found', ['id' => $numericId]);
@@ -187,9 +210,10 @@ class HubPaymentRequestController extends Controller
 
     public function store_branch(Request $request)
     {
+        // ✅ STEP 0: DEFINE is_cod (THIS WAS MISSING)
+        $isCod = $request->has('is_cod');
 
-        // dd($request->all());
-        // Validation
+        // ✅ Validation
         $validated = $request->validate([
             'request_type' => 'required|in:in,out',
             'item_type' => 'required|string',
@@ -200,33 +224,52 @@ class HubPaymentRequestController extends Controller
             'unit' => 'required|string',
             'quantity' => 'required|numeric|min:0',
             'amount' => 'required|numeric|min:0',
+
             'include_gst' => 'nullable',
             'cgst' => 'nullable|numeric|min:0|max:100',
             'sgst' => 'nullable|numeric|min:0|max:100',
+            'igst' => 'nullable|numeric|min:0|max:100',
+
             'description' => 'required|string',
-            'vehicle_no' => 'required|string|max:50'
+            'vehicle_no' => 'required|string|max:50',
+
+            // ✅ COD FIX
+            'is_cod' => 'nullable',
+            'cod_amount' => $isCod ? 'required|numeric|min:0.01' : 'nullable',
+            'cod_payment_mode' => 'nullable|string|max:50',
+            'cod_remarks' => 'nullable|string',
+
+            'city'  => 'required|string|max:100',
+            'state' => 'required|string|max:100',
         ]);
 
-        // // Fix checkbox value - "on" ko 1 mein convert karo
+        // ✅ Normalize checkbox values
+        $validated['is_cod'] = $isCod ? 1 : 0;
         $validated['include_gst'] = $request->has('include_gst') ? 1 : 0;
 
-        // // GST Calculation
+        // ✅ If COD unchecked → force null
+        if (!$validated['is_cod']) {
+            $validated['cod_amount'] = null;
+            $validated['cod_payment_mode'] = null;
+            $validated['cod_remarks'] = null;
+        }
+
+        // ✅ GST calculation
         if ($validated['include_gst']) {
             $amount = (float) $request->amount;
             $cgst = (float) ($request->cgst ?? 0);
             $sgst = (float) ($request->sgst ?? 0);
+            $igst = (float) ($request->igst ?? 0);
 
-            $cgstAmount = ($amount * $cgst) / 100;
-            $sgstAmount = ($amount * $sgst) / 100;
-            $validated['total_with_gst'] = $amount + $cgstAmount + $sgstAmount;
-
-            // CGST aur SGST values set karo
-            $validated['cgst'] = $cgst;
-            $validated['sgst'] = $sgst;
+            $validated['total_with_gst'] =
+                $amount +
+                ($amount * $cgst / 100) +
+                ($amount * $sgst / 100) +
+                ($amount * $igst / 100);
         } else {
-            // Agar checkbox unchecked hai to GST fields null set karo
             $validated['cgst'] = null;
             $validated['sgst'] = null;
+            $validated['igst'] = null;
             $validated['total_with_gst'] = null;
         }
 
@@ -236,11 +279,10 @@ class HubPaymentRequestController extends Controller
             return redirect()->route('hubs.branch.index');
         } catch (\Exception $e) {
             Log::error('branch Request Error: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', 'Error: ' . $e->getMessage())
-                ->withInput();
+            return back()->with('error', $e->getMessage())->withInput();
         }
     }
+
 
 
     public function getRate(Request $request)
@@ -462,6 +504,10 @@ class HubPaymentRequestController extends Controller
                     'sgst' => $request->sgst,
                     'description' => $request->description,
                     'include_gst' => !empty($request->cgst) || !empty($request->sgst),
+                    'is_cod' => $request->is_cod,
+                    'cod_amount' => $request->cod_amount,
+                    'cod_payment_mode' => $request->cod_payment_mode,
+                    'cod_remarks' => $request->cod_remarks,
                 ]
             ]);
         } catch (\Exception $e) {
@@ -480,5 +526,100 @@ class HubPaymentRequestController extends Controller
             'branches' => $branches
         ]);
         return response()->json(['branches' => $branches]);
+    }
+
+
+    public function getStateByCity(Request $request)
+    {
+        $cityInput = trim($request->query('city'));
+
+        if (strlen($cityInput) < 3) {
+            return response()->json([
+                'success' => false,
+                'state' => null
+            ]);
+        }
+
+        if (!Storage::exists('data/states+cities.json')) {
+            Log::error('JSON file not found');
+            return response()->json([
+                'success' => false,
+                'state' => null
+            ]);
+        }
+
+        $json = Storage::get('data/states+cities.json');
+        $stateCities = json_decode($json, true);
+
+        if (!is_array($stateCities)) {
+            Log::error('Invalid JSON format');
+            return response()->json([
+                'success' => false,
+                'state' => null
+            ]);
+        }
+
+        $normalize = fn($v) => mb_strtolower(trim($v));
+        $foundState = null;
+
+        foreach ($stateCities as $state => $cities) {
+            foreach ($cities as $city) {
+                if ($normalize($city) === $normalize($cityInput)) {
+                    $foundState = $state;
+                    break 2;
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => $foundState !== null,
+            'state'   => $foundState,
+            'city'    => ucwords($cityInput)
+        ]);
+    }
+
+    public function getCitiesSuggestions(Request $request)
+    {
+        $query = trim($request->query('q', '')); // 'q' parameter से search
+
+        if (strlen($query) < 2) {
+            return response()->json(['results' => []]);
+        }
+
+        if (!Storage::exists('data/states+cities.json')) {
+            return response()->json(['results' => []]);
+        }
+
+        $json = Storage::get('data/states+cities.json');
+        $stateCities = json_decode($json, true);
+
+        if (!is_array($stateCities)) {
+            return response()->json(['results' => []]);
+        }
+
+        $normalize = fn($str) => mb_strtolower(preg_replace('/\s+/', ' ', trim($str)));
+        $normalizedQuery = $normalize($query);
+
+        $results = [];
+
+        foreach ($stateCities as $state => $cities) {
+            foreach ($cities as $city) {
+                if (str_contains($normalize($city), $normalizedQuery)) {
+                    $results[] = [
+                        'city'  => $city,
+                        'state' => $state,
+                        'label' => $city . ', ' . $state  // suggestion में दिखाने के लिए
+                    ];
+
+                    // Max 10-15 results काफी हैं
+                    if (count($results) >= 15) break 2;
+                }
+            }
+        }
+
+        // Alphabetical sort by city name
+        usort($results, fn($a, $b) => strcmp($a['city'], $b['city']));
+
+        return response()->json(['results' => $results]);
     }
 }

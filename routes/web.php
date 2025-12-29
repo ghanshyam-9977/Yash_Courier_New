@@ -283,6 +283,9 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
                 Route::get('/get-all-branches', [HubPaymentRequestController::class, 'getAllBranches'])
                     ->name('get.all.branches');
 
+                Route::get('/get-state-by-city', [HubPaymentRequestController::class, 'getStateByCity'])->name('get.state.by.city');
+                // routes/web.php या api.php में
+                Route::get('/get-cities-suggestions', [HubPaymentRequestController::class, 'getCitiesSuggestions'])->name('get.cities.suggestions');
 
                 Route::post('hub-panelv/payment-request/store-branch', [HubPaymentRequestController::class, 'store_branch'])->name('hub-panel.payment-request.store_branch');
 

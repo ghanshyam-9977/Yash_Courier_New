@@ -20,7 +20,18 @@ class BranchPaymentRequest extends Model
         'description',
         'quantity',
         'unit',
-        'transport_type'
+        'transport_type',
+        'is_cod',
+        'cod_amount',
+        'cod_payment_mode',
+        'cod_remarks',
+        'city',
+        'state',
+        'cgst',
+        'sgst',
+        'igst',
+        'total_with_gst',
+        'include_gst', 
     ];
 
     public function fromBranch()
