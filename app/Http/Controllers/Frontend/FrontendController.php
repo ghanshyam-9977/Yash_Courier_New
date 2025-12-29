@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Mail\ContactMail;
+use App\Models\Backend\Hub;
 use App\Repositories\DeliveryCharge\DeliveryChargeInterface;
 use App\Repositories\FrontWeb\Blogs\BlogsInterface;
 use App\Repositories\FrontWeb\Faq\FaqInterface;
@@ -77,8 +78,25 @@ class FrontendController extends Controller
         return view('frontend.pages.page', compact('page'));
     }
 
-    public function ourServices(){
+    public function ourServices()
+    {
         return view('frontend.pages.services');
+    }
+
+    public function pincodeList()
+    {
+        $hubs = Hub::where('status', 1)
+            ->select('id', 'name', 'phone', 'address', 'city', 'pincode')
+            ->get();
+
+        return view('frontend.pages.pincodeList', compact('hubs'));
+    }
+    public function branchList()
+    {
+         $hubs = Hub::where('status', 1)
+            ->select('id', 'name', 'phone', 'address', 'city', 'pincode')
+            ->get();
+        return view('frontend.pages.branchList',compact('hubs'));
     }
 
 
@@ -171,7 +189,7 @@ class FrontendController extends Controller
     public function blogs()
     {
         $blogs = $this->blogRepo->getActive();
-        Log::info('blog_data', ['data'=> $blogs]);
+        Log::info('blog_data', ['data' => $blogs]);
         return view('frontend.pages.blogs_page', compact('blogs'));
     }
     public function blogDetails($id)

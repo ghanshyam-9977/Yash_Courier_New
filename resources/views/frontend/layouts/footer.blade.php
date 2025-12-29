@@ -51,11 +51,11 @@
                             <a class="text-white mb-2" href={{ route('services.index') }}>
                                 <i class="fa fa-angle-right mr-2" style="color:#0077B5;"></i>Our Services</a>
 
-                            {{-- <a class="text-white mb-2" href={{ route('services.index') }}>
-                                <i class="fa fa-angle-right mr-2" style="color:#0077B5;"></i>ServicePincode</a> --}}
+                            <a class="text-white mb-2" href={{ route('pincode.index') }}>
+                                <i class="fa fa-angle-right mr-2" style="color:#0077B5;"></i>ServicePincode</a>
 
-                            {{-- <a class="text-white mb-2" href="#">
-                                <i class="fa fa-angle-right mr-2" style="color:#0077B5;"></i>BranchList</a> --}}
+                            <a class="text-white mb-2" href={{ route('branchlist.index') }}>
+                                <i class="fa fa-angle-right mr-2" style="color:#0077B5;"></i>BranchList</a>
 
                             <a class="text-white mb-2" href="{{ route('tracking.index') }}">
                                 <i class="fa fa-angle-right mr-2" style="color:#0077B5;"></i>Tracking</a>

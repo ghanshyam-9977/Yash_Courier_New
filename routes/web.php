@@ -135,6 +135,8 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
         Route::get('/tracking', 'tracking')->name('tracking.index');
         Route::get('/about-us', 'aboutUs')->name('aboutus.index');
         Route::get('/our-services', 'ourServices')->name('services.index');
+        Route::get('/pincode-list', 'pincodeList')->name('pincode.index');
+        Route::get('/branch-list', 'branchList')->name('branchlist.index');
         Route::get('/privacy-and-policy', 'privacyPolicy')->name('privacy.policy.index');
         Route::get('/terms-of-condition', 'termsOfCondition')->name('termsof.condition.index');
         Route::get('/faq-list', 'faq')->name('get.faq.index');
