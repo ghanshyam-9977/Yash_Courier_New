@@ -208,80 +208,123 @@ class HubPaymentRequestController extends Controller
     }
 
 
+    /**
+     * Generate unique manifest number based on request type
+     */
+    // private function generateManifestNo(string $requestType): string
+    // {
+    //     $prefix = strtoupper($requestType) === 'OUT' ? 'OUT-' : 'IN-';
+
+    //     do {
+    //         // Create manifest number like OUT-000123 or IN-000456
+    //         $number = $prefix . str_pad(mt_rand(1, 999999), 6, '0', STR_PAD_LEFT);
+
+    //         // Check if manifest_no already exists
+    //         $exists = BranchPaymentRequest::where('manifest_no', $number)->exists();
+    //     } while ($exists);
+
+    //     return $number;
+    // }
+
+
     public function store_branch(Request $request)
     {
-        // ✅ STEP 0: DEFINE is_cod (THIS WAS MISSING)
-        $isCod = $request->has('is_cod');
-
-        // ✅ Validation
-        $validated = $request->validate([
-            'request_type' => 'required|in:in,out',
-            'item_type' => 'required|string',
-            'tracking_number' => 'required|string',
-            'from_branch_id' => 'required',
-            'to_branch_id' => 'required',
-            'transport_type' => 'required|in:by_road,by_air',
-            'unit' => 'required|string',
-            'quantity' => 'required|numeric|min:0',
-            'amount' => 'required|numeric|min:0',
-
-            'include_gst' => 'nullable',
-            'cgst' => 'nullable|numeric|min:0|max:100',
-            'sgst' => 'nullable|numeric|min:0|max:100',
-            'igst' => 'nullable|numeric|min:0|max:100',
-
-            'description' => 'required|string',
-            'vehicle_no' => 'required|string|max:50',
-
-            // ✅ COD FIX
-            'is_cod' => 'nullable',
-            'cod_amount' => $isCod ? 'required|numeric|min:0.01' : 'nullable',
-            'cod_payment_mode' => 'nullable|string|max:50',
-            'cod_remarks' => 'nullable|string',
-
-            'city'  => 'required|string|max:100',
-            'state' => 'required|string|max:100',
-        ]);
-
-        // ✅ Normalize checkbox values
-        $validated['is_cod'] = $isCod ? 1 : 0;
-        $validated['include_gst'] = $request->has('include_gst') ? 1 : 0;
-
-        // ✅ If COD unchecked → force null
-        if (!$validated['is_cod']) {
-            $validated['cod_amount'] = null;
-            $validated['cod_payment_mode'] = null;
-            $validated['cod_remarks'] = null;
-        }
-
-        // ✅ GST calculation
-        if ($validated['include_gst']) {
-            $amount = (float) $request->amount;
-            $cgst = (float) ($request->cgst ?? 0);
-            $sgst = (float) ($request->sgst ?? 0);
-            $igst = (float) ($request->igst ?? 0);
-
-            $validated['total_with_gst'] =
-                $amount +
-                ($amount * $cgst / 100) +
-                ($amount * $sgst / 100) +
-                ($amount * $igst / 100);
-        } else {
-            $validated['cgst'] = null;
-            $validated['sgst'] = null;
-            $validated['igst'] = null;
-            $validated['total_with_gst'] = null;
-        }
-
         try {
+            $isCod = $request->has('is_cod');
+
+            $validated = $request->validate([
+                'request_type' => 'required|in:in,out',
+                'item_type' => 'required|string',
+                'tracking_number' => 'required|string',
+                'manifest_no' => 'required|string',
+                'from_branch_id' => 'required',
+                'to_branch_id' => 'required',
+                'transport_type' => 'required|in:by_road,by_air',
+                'unit' => 'required|string',
+                'quantity' => 'required|numeric|min:0',
+                'amount' => 'required|numeric|min:0',
+
+                'include_gst' => 'nullable',
+                'cgst' => 'nullable|numeric|min:0|max:100',
+                'sgst' => 'nullable|numeric|min:0|max:100',
+                'igst' => 'nullable|numeric|min:0|max:100',
+
+                'description' => 'required|string',
+                'vehicle_no' => 'required|string|max:50',
+
+                'is_cod' => 'nullable',
+                'cod_amount' => $isCod ? 'required|numeric|min:0.01' : 'nullable',
+                'cod_payment_mode' => 'nullable|string|max:50',
+                'cod_remarks' => 'nullable|string',
+
+                'city'  => 'required|string|max:100',
+                'state' => 'required|string|max:100',
+            ]);
+
+            $validated['is_cod'] = $isCod ? 1 : 0;
+            $validated['include_gst'] = $request->has('include_gst') ? 1 : 0;
+
+            if (!$validated['is_cod']) {
+                $validated['cod_amount'] = null;
+                $validated['cod_payment_mode'] = null;
+                $validated['cod_remarks'] = null;
+            }
+
+            if ($validated['include_gst']) {
+                $amount = (float) $request->amount;
+                $cgst = (float) ($request->cgst ?? 0);
+                $sgst = (float) ($request->sgst ?? 0);
+                $igst = (float) ($request->igst ?? 0);
+
+                $validated['total_with_gst'] =
+                    $amount +
+                    ($amount * $cgst / 100) +
+                    ($amount * $sgst / 100) +
+                    ($amount * $igst / 100);
+            } else {
+                $validated['cgst'] = null;
+                $validated['sgst'] = null;
+                $validated['igst'] = null;
+                $validated['total_with_gst'] = null;
+            }
+
+            // GENERATE UNIQUE MANIFEST NO
+            // $validated['manifest_no'] = $this->generateManifestNo($validated['request_type']);
+
             BranchPaymentRequest::create($validated);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => __('branch_payment_request.added_msg')
+                ]);
+            }
+
             Toastr::success(__('branch_payment_request.added_msg'), __('message.success'));
             return redirect()->route('hubs.branch.index');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
         } catch (\Exception $e) {
             Log::error('branch Request Error: ' . $e->getMessage());
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+
             return back()->with('error', $e->getMessage())->withInput();
         }
     }
+
+
 
 
 

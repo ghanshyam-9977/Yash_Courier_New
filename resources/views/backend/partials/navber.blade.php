@@ -389,7 +389,7 @@
                                         <li class="nav-item dropdown admin-panel notification  d-lg-block">
                                             <a href="{{ url('/') }}" target="_blank" class="me-2"><i class="fa fa-globe navbar-globe"></i></a>
                                         </li>
-                                        
+
                                         <li class="nav-item dropdown admin-panel notification d-lg-block">
                                             <a class="nav-link nav-icons mt-md-3" href="#" id="navbarDropdownMenuLink1" data-toggle="dropdown"   aria-haspopup="true" aria-expanded="false"><i class="fas fa-fw fa-bell"></i> <span class="indicator"></span></a>
                                             <ul class="dropdown-menu dropdown-menu-right notification-dropdown">

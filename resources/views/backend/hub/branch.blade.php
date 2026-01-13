@@ -99,11 +99,11 @@
                                     data-toggle="tooltip" data-placement="top" title="Generate Estimate">
                                     <i class="fa fa-file-text-o"></i> Generate Estimate
                                 </a>
-                                <a href="{{ route('branch.estimate-perday', request()->all()) }}"
+                                {{-- <a href="{{ route('branch.estimate-perday', request()->all()) }}"
                                     class="btn btn-dark btn-sm mr-2" data-toggle="tooltip" data-placement="top"
                                     title="Generate Estimate ParDay">
                                     <i class="fa fa-file-text-o"></i> Generate Estimate Per Day
-                                </a>
+                                </a> --}}
 
                                 <a href="{{ route('hub-panel.payment-request.create') }}" class="btn btn-primary btn-sm"
                                     data-toggle="tooltip" data-placement="top" title="{{ __('levels.add') }}">

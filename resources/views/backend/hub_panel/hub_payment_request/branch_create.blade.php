@@ -33,7 +33,7 @@
                     </div>
 
                     <div class="card-body">
-                        <form action="{{ route('hub-panel.payment-request.store_branch') }}" method="POST">
+                        <form action="{{ route('hub-panel.payment-request.store_branch') }}" method="POST" id="branch-payment-form">
                             @csrf
 
                             <!-- Request Type Selection -->
@@ -42,12 +42,12 @@
                                 <div class="mt-2">
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="type_out" name="request_type" value="out"
-                                            class="custom-control-input" required>
+                                            class="custom-control-input" {{ old('request_type') == 'out' ? 'checked' : '' }} required>
                                         <label class="custom-control-label" for="type_out">OUT</label>
                                     </div>
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="type_in" name="request_type" value="in"
-                                            class="custom-control-input" required>
+                                            class="custom-control-input" {{ old('request_type') == 'in' ? 'checked' : '' }} required>
                                         <label class="custom-control-label" for="type_in">IN</label>
                                     </div>
                                 </div>
@@ -56,17 +56,24 @@
                                 @enderror
                             </div>
 
-                            {{-- <div class="form-group">
-                                <label for="vehicle_no">Vehicle No</label>
-                                <input type="text" name="vehicle_no" id="vehicle_no" class="form-control"
-                                    placeholder="e.g. UP32 AB 1234" value="{{ old('vehicle_no') }}">
-                            </div> --}}
+                            <!-- Manifest No Field -->
+                            <div class="form-group" id="manifest-container" style="display:none;">
+                                <label for="manifest_no">Manifest No <span class="text-danger">*</span></label>
+                                <input type="text" id="manifest_no" name="manifest_no" class="form-control"
+                                    placeholder="Enter manifest number" value="{{ old('manifest_no') }}" required>
+                                <small class="form-text text-muted">Enter the manifest number for this request</small>
+                                @error('manifest_no')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                            </div>
+
+
 
                             <div class="form-group" id="vehicle-container" style="display:none;">
                                 <label for="vehicle_number" id="vehicle-label">Vehicle No<span
                                         class="text-danger">*</span></label>
                                 <input type="text" id="vehicle_number" name="vehicle_no" class="form-control"
-                                    placeholder="Enter vehicle number" required>
+                                    placeholder="Enter vehicle number" value="{{ old('vehicle_no') }}" required>
                                 <small class="form-text text-muted" id="vehicle-hint"></small>
                             </div>
 
@@ -136,17 +143,17 @@
                                 <div class="mt-2">
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="item_document" name="item_type" value="document"
-                                            class="custom-control-input" required>
+                                            class="custom-control-input" {{ old('item_type') == 'document' ? 'checked' : '' }} required>
                                         <label class="custom-control-label" for="item_document">Document</label>
                                     </div>
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="item_parcel" name="item_type" value="parcel"
-                                            class="custom-control-input" required>
+                                            class="custom-control-input" {{ old('item_type') == 'parcel' ? 'checked' : '' }} required>
                                         <label class="custom-control-label" for="item_parcel">Parcel</label>
                                     </div>
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="item_urgent" name="item_type" value="urgent"
-                                            class="custom-control-input" required>
+                                            class="custom-control-input" {{ old('item_type') == 'urgent' ? 'checked' : '' }} required>
                                         <label class="custom-control-label" for="item_urgent">Urgent</label>
                                     </div>
                                 </div>
@@ -179,7 +186,7 @@
                                 <label for="tracking_number" id="tracking-label">Tracking / Consignment No <span
                                         class="text-danger">*</span></label>
                                 <input type="text" id="tracking_number" name="tracking_number" class="form-control"
-                                    placeholder="Enter or auto-generated tracking number" required>
+                                    placeholder="Enter or auto-generated tracking number" value="{{ old('tracking_number') }}" required>
                                 <small class="form-text text-muted" id="tracking-hint"></small>
                             </div>
 
@@ -193,8 +200,8 @@
                                             placeholder="Type city name (e.g. Indore, Delhi...)" autocomplete="off"
                                             value="{{ old('city') }}" required>
 
-                                        <input type="hidden" name="city" id="city-hidden">
-                                        <input type="hidden" name="state" id="state-hidden">
+                                        <input type="hidden" name="city" id="city-hidden" value="{{ old('city') }}">
+                                        <input type="hidden" name="state" id="state-hidden" value="{{ old('state') }}">
 
                                         <small class="form-text text-muted">Start typing to see suggestions...</small>
 
@@ -211,7 +218,7 @@
                                     <div class="form-group">
                                         <label for="state-display">State <span class="text-danger">*</span></label>
                                         <input type="text" id="state-display" class="form-control" readonly>
-                                        <input type="hidden" name="state" id="state-hidden-value">
+                                        <input type="hidden" name="state" id="state-hidden-value" value="{{ old('state') }}">
                                     </div>
                                 </div>
                             </div>
@@ -470,6 +477,7 @@
             function handleOutRequest() {
                 $('#from-branch-label').html('Branch From <span class="text-danger">*</span>');
                 $('#to-branch-label').html('To Branch <span class="text-danger">*</span>');
+                $('#manifest-container').show();
                 $('#branch-row').show();
                 $('#item-type-container').show();
                 $('#transport-type-container').show();
@@ -477,7 +485,6 @@
                 $('#vehicle-container').show();
                 $('#tracking-label').html('Tracking / Consignment No <span class="text-danger">*</span>');
                 $('#vehicle-label').html('Vehicle No <span class="text-danger">*</span>');
-                generateTrackingNumber();
                 $('#tracking-hint').text('Auto-generated tracking number');
                 $('#location-row').show();
                 $('#weight-quantity-row').show();
@@ -494,6 +501,7 @@
             function handleInRequest() {
                 $('#from-branch-label').html('From Branch <span class="text-danger">*</span>');
                 $('#to-branch-label').html('Receive Branch <span class="text-danger">*</span>');
+                $('#manifest-container').show();
                 $('#branch-row').show();
                 $('#item-type-container').show();
                 $('#transport-type-container').show();
@@ -501,7 +509,7 @@
                 $('#vehicle-container').show();
                 $('#tracking-label').html('Tracking / Consignment No <span class="text-danger">*</span>');
                 $('#vehicle-label').html('Vehicle No <span class="text-danger">*</span>');
-                $('#tracking_number').prop('readonly', false).val('');
+                $('#tracking_number').prop('', false).val('');
                 $('#vehicle_number').prop('', false).val('');
                 $('#tracking-hint').text('Enter tracking number to auto-fill all details');
                 $('#location-row').show();
@@ -839,11 +847,11 @@
             // ========== UTILITY FUNCTIONS ==========
 
             // Generate Tracking Number (for OUT)
-            function generateTrackingNumber() {
-                const timestamp = Date.now().toString(36).toUpperCase();
-                const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-                $('#tracking_number').val('CN-' + timestamp + random);
-            }
+            // function generateTrackingNumber() {
+            //     const timestamp = Date.now().toString(36).toUpperCase();
+            //     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+            //     $('#tracking_number').val('CN-' + timestamp + random);
+            // }
 
             // GST Checkbox Toggle
             $('#include_gst').on('change', function() {
@@ -876,9 +884,9 @@
 
             // Reset all fields
             function resetAllFields() {
-                $('#branch-row, #item-type-container, #transport-type-container, #tracking-container, #location-row, #weight-quantity-row, #amount-container, #gst-checkbox-container, #description-container')
+                $('#manifest-container, #branch-row, #item-type-container, #transport-type-container, #tracking-container, #location-row, #weight-quantity-row, #amount-container, #gst-checkbox-container, #description-container')
                     .hide();
-                $('#from_branch_select, #to_branch_id, #city, #state, #transport_type, #unit, #quantity, #amount, #description, #tracking_number')
+                $('#manifest_no, #from_branch_select, #to_branch_id, #city, #state, #transport_type, #unit, #quantity, #amount, #description, #tracking_number')
                     .val('');
                 $('input[name="item_type"]').prop('checked', false);
                 $('#include_gst').prop('checked', false);
@@ -895,16 +903,21 @@
 
             // Show notification helper
             function showNotification(type, message) {
-                // You can replace this with your notification system (toastr, sweetalert, etc.)
-                console.log(`[${type.toUpperCase()}] ${message}`);
-
-                // Example with simple alert (replace with your notification plugin)
-                if (type === 'error') {
-                    alert('❌ ' + message);
-                } else if (type === 'success') {
-                    alert('✅ ' + message);
-                } else if (type === 'warning') {
-                    alert('⚠️ ' + message);
+                // Use toastr if available, otherwise alert
+                if (typeof toastr !== 'undefined') {
+                    if (type === 'success') {
+                        toastr.success(message);
+                    } else if (type === 'error') {
+                        toastr.error(message);
+                    } else if (type === 'warning') {
+                        toastr.warning(message);
+                    } else {
+                        toastr.info(message);
+                    }
+                } else {
+                    // Fallback to alert
+                    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+                    alert(icon + ' ' + message);
                 }
             }
 
@@ -914,6 +927,50 @@
                 $('#cgst, #sgst').attr('required', 'required');
                 calculateGST();
             @endif
+
+            // AJAX Form Submission
+            $('#branch-payment-form').on('submit', function(e) {
+                e.preventDefault(); // Prevent default form submission
+
+                // Get form data
+                const formData = new FormData(this);
+
+                // Disable submit button to prevent double submission
+                const submitBtn = $(this).find('button[type="submit"]');
+                const originalText = submitBtn.text();
+                submitBtn.prop('disabled', true).text('Submitting...');
+
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            showNotification('success', response.message || 'Request submitted successfully!');
+                            // Form data remains filled, no reset
+                        } else {
+                            showNotification('error', response.message || 'An error occurred.');
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'An error occurred while submitting the form.';
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            // Handle validation errors
+                            const errors = xhr.responseJSON.errors;
+                            errorMessage = Object.values(errors).flat().join('\n');
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        showNotification('error', errorMessage);
+                    },
+                    complete: function() {
+                        // Re-enable submit button
+                        submitBtn.prop('disabled', false).text(originalText);
+                    }
+                });
+            });
         });
     </script>
 @endpush

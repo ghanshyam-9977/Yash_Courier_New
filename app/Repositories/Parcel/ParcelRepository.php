@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Repositories\Parcel;
 
 use App\Enums\ApprovalStatus;
@@ -29,6 +30,7 @@ use App\Models\Backend\VatStatement;
 use App\Repositories\Parcel\ParcelInterface;
 
 use App\Models\Backend\ParcelLogs;
+use App\Models\BranchPaymentGet;
 use App\Models\Config;
 use App\Repositories\Wallet\WalletInterface;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +38,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+
 class ParcelRepository implements ParcelInterface
 {
 
@@ -54,9 +57,7 @@ class ParcelRepository implements ParcelInterface
             return Parcel::with('parcelEvent')->where('hub_id', $userHubID)->orderBy('priority_type_id', 'asc')->orderBy('id', 'desc')->paginate(10);
         } else {
             return Parcel::with('parcelEvent')->orderBy('id', 'desc')->orderBy('priority_type_id', 'asc')->paginate(10);
-
         }
-
     }
 
 
@@ -108,7 +109,6 @@ class ParcelRepository implements ParcelInterface
                         $to = Carbon::parse(trim($date[1]))->endOfDay()->toDateTimeString();
                         $query->whereBetween('created_at', [$from, $to]);
                     }
-
                 }
 
                 if ($request->parcel_status) {
@@ -179,11 +179,8 @@ class ParcelRepository implements ParcelInterface
                 if ($request->invoice_id) {
                     $query->where('invoice_no', 'like', '%' . $request->invoice_id . '%');
                 }
-
             })->paginate(10);
-
         }
-
     }
 
 
@@ -230,8 +227,6 @@ class ParcelRepository implements ParcelInterface
                         }
                     });
                 }
-
-
             })->get();
         } else {
             return Parcel::with('parcelEvent')->orderBy('updated_at')->orderBy('priority_type_id')->where(function ($query) use ($request) {
@@ -275,11 +270,8 @@ class ParcelRepository implements ParcelInterface
                         }
                     });
                 }
-
             })->get();
-
         }
-
     }
 
 
@@ -300,6 +292,12 @@ class ParcelRepository implements ParcelInterface
     {
         return ParcelEvent::with(['deliveryMan', 'pickupman', 'transferDeliveryman', 'hub', 'user'])->where('parcel_id', $id)->orderBy('created_at', 'desc')->get();
     }
+
+    public function getParcelByTrackingNumber($trackingNumber)
+    {
+        return BranchPaymentGet::where('tracking_number', $trackingNumber)->first();
+    }
+
     public function parcelTracking($request)
     {
         return Parcel::where('tracking_id', $request->tracking_id)->first();
@@ -361,7 +359,7 @@ class ParcelRepository implements ParcelInterface
             $chargeDetails = json_decode($request->chargeDetails);
             $parcel = new Parcel();
             $parcel->merchant_id = $request->merchant_id;
-            $parcel->first_hub_id = $merchant->user->hub_id;//merchant hub id
+            $parcel->first_hub_id = $merchant->user->hub_id; //merchant hub id
             $parcel->hub_id = $merchant->user->hub_id;
             $parcel->category_id = $request->category_id;
             if ($request->weight !== "") {
@@ -483,7 +481,6 @@ class ParcelRepository implements ParcelInterface
                     $msg = 'Dear ' . $parcel->customer_name . ', Your parcel is successfully created. Your parcel with ID ' . $parcel->tracking_id . ' parcel from ' . $parcel->merchant->business_name . ' (' . $parcel->cash_collection . ')';
                 endif;
                 $response = app(SmsService::class)->sendSms($parcel->customer_phone, $msg);
-
             }
             return true;
         } catch (\Exception $e) {
@@ -502,7 +499,7 @@ class ParcelRepository implements ParcelInterface
             $duplicate_parcel = $this->get($request->parcel_id);
             $parcel = new Parcel();
             $parcel->merchant_id = $request->merchant_id;
-            $parcel->first_hub_id = $merchant->user->hub_id;//merchant hub_id
+            $parcel->first_hub_id = $merchant->user->hub_id; //merchant hub_id
             $parcel->hub_id = $merchant->user->hub_id;
             $parcel->category_id = $request->category_id;
             if ($request->weight !== "") {
@@ -656,7 +653,7 @@ class ParcelRepository implements ParcelInterface
 
             $parcel = Parcel::find($id);
             $parcel->merchant_id = $request->merchant_id;
-            $parcel->first_hub_id = $merchant->user->hub_id;//merchant hub_id
+            $parcel->first_hub_id = $merchant->user->hub_id; //merchant hub_id
             $parcel->hub_id = $merchant->user->hub_id;
             $parcel->category_id = $request->category_id;
             if ($request->weight !== "") {
@@ -787,7 +784,6 @@ class ParcelRepository implements ParcelInterface
                 $msgNotification = 'Dear ' . $pickupAsisgn->pickupman->user->name . ', Please pickup parcel with ID ' . $parcel->tracking_id . ' parcel from (' . $parcel->merchant->business_name . ',' . $parcel->merchant->user->mobile . ',' . $parcel->merchant->address . ') within ' . dateFormat($parcel->pickup_date) . ' -' . settings()->name;
                 app(PushNotificationService::class)->sendStatusPushNotification($parcel, $pickupAsisgn->pickupman->user->email, $msgNotification, 'deliveryMan');
             } catch (\Exception $exception) {
-
             }
 
 
@@ -805,7 +801,6 @@ class ParcelRepository implements ParcelInterface
                 $msgNotification = 'Dear ' . $parcel->merchant->business_name . ', your  parcel with ID ' . $parcel->tracking_id . ' Pickup man assign from ' . settings()->name . '. Assign by ' . $pickupAsisgn->pickupman->user->name . ', ' . $pickupAsisgn->pickupman->user->mobile . ' Track here: ' . url('/') . ' -' . settings()->name;
                 app(PushNotificationService::class)->sendStatusPushNotification($parcel, $parcel->merchant->user->email, $msgNotification, 'merchant');
             } catch (\Exception $exception) {
-
             }
 
             return true;
@@ -843,8 +838,7 @@ class ParcelRepository implements ParcelInterface
                 if (date('H') < DeliveryTime::LAST_TIME) {
                     $parcel->delivery_date = $date->add(1, 'day')->format('Y-m-d');
                 } else {
-                    $parcel->delivery_date = $date->add(2, 'day')->format('Y-m-d');
-                    ;
+                    $parcel->delivery_date = $date->add(2, 'day')->format('Y-m-d');;
                 }
             } elseif ($parcel->delivery_type_id == DeliveryType::SUBCITY) {
                 if (date('H') < DeliveryTime::LAST_TIME) {
@@ -888,13 +882,11 @@ class ParcelRepository implements ParcelInterface
                 $msgNotification = 'Dear ' . $pickupReshcedule->pickupman->user->name . ', Please pickup parcel with ID ' . $parcel->tracking_id . ' parcel from (' . $parcel->merchant->business_name . ',' . $parcel->merchant->user->mobile . ',' . $parcel->merchant->address . ') within ' . dateFormat($parcel->pickup_date) . ' -' . settings()->name;
                 app(PushNotificationService::class)->sendStatusPushNotification($parcel, $pickupReshcedule->pickupman->user->email, $msgNotification, 'deliveryMan');
             } catch (\Exception $exception) {
-
             }
             try {
                 $msgNotification = 'Dear ' . $parcel->merchant->business_name . ', your  parcel with ID ' . $parcel->tracking_id . ' Pickup man assign from ' . settings()->name . '. Assign by ' . $pickupReshcedule->pickupman->user->name . ', ' . $pickupReshcedule->pickupman->user->mobile . ' Track here: ' . url('/') . ' -' . settings()->name;
                 app(PushNotificationService::class)->sendStatusPushNotification($parcel, $parcel->merchant->user->email, $msgNotification, 'merchant');
             } catch (\Exception $exception) {
-
             }
             return true;
         } catch (\Throwable $th) {
@@ -996,8 +988,6 @@ class ParcelRepository implements ParcelInterface
                     endif;
                     $response = app(SmsService::class)->sendSms($parcel->customer_phone, $msg);
                 }
-
-
             }
 
             return true;
@@ -1063,7 +1053,6 @@ class ParcelRepository implements ParcelInterface
                 $msgNotification = 'Dear ' . $deliverymanAssign->deliveryMan->user->name . ', your  parcel with ID ' . $parcel->tracking_id . ' Track here: ' . url('/') . ' -' . settings()->name;
                 app(PushNotificationService::class)->sendStatusPushNotification($parcel, $deliverymanAssign->deliveryMan->user->email, $msgNotification, 'deliveryMan');
             } catch (\Exception $exception) {
-
             }
 
             return true;
@@ -1104,7 +1093,6 @@ class ParcelRepository implements ParcelInterface
                 $msgNotification = 'Dear ' . $deliveryReschedule->deliveryMan->user->name . ', your  parcel with ID ' . $parcel->tracking_id . ' Track here: ' . url('/') . ' -' . settings()->name;
                 app(PushNotificationService::class)->sendStatusPushNotification($parcel, $deliveryReschedule->deliveryMan->user->email, $msgNotification, 'deliveryMan');
             } catch (\Exception $exception) {
-
             }
             return true;
         } catch (\Throwable $th) {
@@ -1193,8 +1181,6 @@ class ParcelRepository implements ParcelInterface
                     $msg = 'Dear ' . $parcel->customer_name . ', we received a parcel with ID ' . $parcel->tracking_id . ' from (' . $parcel->merchant->business_name . ') and will deliver as soon as possible. Track here:' . url('/') . '  -' . settings()->name;
                     $response = app(SmsService::class)->sendSms($parcel->customer_phone, $msg);
                 endif;
-
-
             }
 
             if ($request->send_sms_merchant == 'on') {
@@ -1211,7 +1197,6 @@ class ParcelRepository implements ParcelInterface
                 $msgNotification = 'Dear ' . $parcel->merchant->business_name . ', your  parcel with ID ' . $parcel->tracking_id . ' Received to Warehouse ' . $receivedWarehouse->hub->name . '. Track here: ' . url('/') . ' -' . settings()->name;
                 app(PushNotificationService::class)->sendStatusPushNotification($parcel, $parcel->merchant->user->email, $msgNotification, 'merchant');
             } catch (\Exception $exception) {
-
             }
 
             return true;
@@ -1324,7 +1309,6 @@ class ParcelRepository implements ParcelInterface
 
             return false;
         }
-
     }
 
 
@@ -1406,7 +1390,6 @@ class ParcelRepository implements ParcelInterface
                 $msgNotification = 'Dear ' . $parcel->merchant->business_name . ', parcel with ID ' . $parcel->tracking_id . ' is return to you by ' . $returnassigntomerchant->deliveryMan->user->name . ', ' . $returnassigntomerchant->deliveryMan->user->mobile . '. visit:' . url('/') . '  -' . settings()->name;
                 app(PushNotificationService::class)->sendStatusPushNotification($parcel, $parcel->merchant->user->email, $msgNotification, 'merchant');
             } catch (\Exception $exception) {
-
             }
 
             return true;
@@ -1414,7 +1397,6 @@ class ParcelRepository implements ParcelInterface
             DB::rollBack();
             return false;
         }
-
     }
 
     public function returnAssignToMerchantCancel($id, $request)
@@ -1491,7 +1473,6 @@ class ParcelRepository implements ParcelInterface
         } catch (\Throwable $th) {
             return false;
         }
-
     }
 
     public function returnAssignToMerchantRescheduleCancel($id, $request)
@@ -1570,8 +1551,6 @@ class ParcelRepository implements ParcelInterface
                 $courierStatement->date = date('Y-m-d H:i:s');
                 $courierStatement->note = __('statementNote.return_to_merchant_deliveryman_statement');
                 $courierStatement->save();
-
-
             }
             //total delivery charge
             $merchant = Merchant::find($parcel->merchant_id);
@@ -1588,7 +1567,7 @@ class ParcelRepository implements ParcelInterface
             //return delivery charge calculation
             $return_delivery_charge = ($parcel->delivery_charge / 100) * $merchantCost->return_charges;
             //end return  delivery charge calculation
-            $current = ((double) $merchantCost->current_balance - $return_delivery_charge);
+            $current = ((float) $merchantCost->current_balance - $return_delivery_charge);
             $merchantCost->current_balance = $current;
             $merchantCost->save();
             //end merchant expense vat + total charge amount
@@ -1610,7 +1589,6 @@ class ParcelRepository implements ParcelInterface
 
             return false;
         }
-
     }
 
     public function returnReceivedByMerchantCancel($id, $request)
@@ -1652,7 +1630,6 @@ class ParcelRepository implements ParcelInterface
                 $image->move($destinationPath, $imageName);
                 $delivered_image = 'uploads/parcel/image/' . $imageName;
                 $parcelDelivered->delivered_image = $delivered_image;
-
             }
 
             if (isset($_FILES['signatureImage']['name']) && $_FILES['signatureImage']['name']) {
@@ -1662,7 +1639,6 @@ class ParcelRepository implements ParcelInterface
                 $signatureImage->move($destinationPath, $signatureImageName);
                 $signature_image = 'uploads/parcel/signature/' . $signatureImageName;
                 $parcelDelivered->signature_image = $signature_image;
-
             }
 
             $parcelDelivered->parcel_status = ParcelStatus::DELIVERED;
@@ -1753,7 +1729,6 @@ class ParcelRepository implements ParcelInterface
                 $deliveryManBalance = DeliveryMan::find($deliveryMan->id);
                 $deliveryManBalance->current_balance = $deliveryManBalance->current_balance + (-$parcel->cash_collection);
                 $deliveryManBalance->save();
-
             }
 
 
@@ -1775,7 +1750,7 @@ class ParcelRepository implements ParcelInterface
             }
 
             //merchant expense vat + total charge amount
-            if ($parcel->parcel_payment_method == ParcelPaymentMethod::COD)://without wallet payment
+            if ($parcel->parcel_payment_method == ParcelPaymentMethod::COD): //without wallet payment
                 //total delivery charge
                 $merchantStatement = new MerchantStatement();
                 $merchantStatement->parcel_id = $id;
@@ -1850,7 +1825,6 @@ class ParcelRepository implements ParcelInterface
                 $msgNotification = 'Dear Merchant, your  parcel with ID ' . $parcel->tracking_id . ' is successfully delivered. Customer ' . $parcel->customer_name . ', ' . $parcel->customer_phone . ' Track here: ' . url('/') . ' -' . settings()->name;
                 app(PushNotificationService::class)->sendStatusPushNotification($parcel, $parcel->merchant->user->email, $msgNotification, 'merchant');
             } catch (\Exception $exception) {
-
             }
             return true;
         } catch (\Throwable $th) {
@@ -1915,7 +1889,6 @@ class ParcelRepository implements ParcelInterface
                 $deliveryManBalance = DeliveryMan::find($deliveryMan->id);
                 $deliveryManBalance->current_balance = $deliveryManBalance->current_balance + $parcel->cash_collection;
                 $deliveryManBalance->save();
-
             } else {
 
                 $deliveryManAssign = ParcelEvent::where('parcel_id', $id)->where('parcel_status', ParcelStatus::DELIVERY_MAN_ASSIGN)->first();
@@ -1959,7 +1932,6 @@ class ParcelRepository implements ParcelInterface
                 $deliveryManBalance = DeliveryMan::find($deliveryMan->id);
                 $deliveryManBalance->current_balance = $deliveryManBalance->current_balance + $parcel->cash_collection;
                 $deliveryManBalance->save();
-
             }
 
 
@@ -1981,7 +1953,7 @@ class ParcelRepository implements ParcelInterface
             }
 
             //merchant expense vat + total charge amount
-            if ($parcel->parcel_payment_method == ParcelPaymentMethod::COD)://without wallet payment
+            if ($parcel->parcel_payment_method == ParcelPaymentMethod::COD): //without wallet payment
                 //total delivery charge
                 $merchantStatement = new MerchantStatement();
                 $merchantStatement->parcel_id = $id;
@@ -2063,7 +2035,6 @@ class ParcelRepository implements ParcelInterface
                 $msgNotification = 'Dear ' . $parcel->merchant->business_name . ', your  parcel with ID ' . $parcel->tracking_id . '  Delivered cancel. Customer ' . $parcel->customer_name . ', ' . $parcel->customer_phone . ' Track here: ' . url('/') . ' -' . settings()->name;
                 app(PushNotificationService::class)->sendStatusPushNotification($parcel, $parcel->merchant->user->email, $msgNotification, 'merchant');
             } catch (\Exception $exception) {
-
             }
 
             return true;
@@ -2161,7 +2132,6 @@ class ParcelRepository implements ParcelInterface
                     $deliveryManBalance = DeliveryMan::find($deliveryMan->id);
                     $deliveryManBalance->current_balance = $deliveryManBalance->current_balance + (-$parcel->cash_collection);
                     $deliveryManBalance->save();
-
                 } else {
 
                     $deliveryManAssign = ParcelEvent::where('parcel_id', $id)->where('parcel_status', ParcelStatus::DELIVERY_MAN_ASSIGN)->first();
@@ -2206,7 +2176,6 @@ class ParcelRepository implements ParcelInterface
                     $deliveryManBalance = DeliveryMan::find($deliveryMan->id);
                     $deliveryManBalance->current_balance = $deliveryManBalance->current_balance + (-$parcel->cash_collection);
                     $deliveryManBalance->save();
-
                 }
 
 
@@ -2228,7 +2197,7 @@ class ParcelRepository implements ParcelInterface
                 }
 
                 //merchant expense vat + total charge amount
-                if ($parcel->parcel_payment_method == ParcelPaymentMethod::COD)://without wallet payment
+                if ($parcel->parcel_payment_method == ParcelPaymentMethod::COD): //without wallet payment
                     //total delivery charge
                     $merchantStatement = new MerchantStatement();
                     $merchantStatement->parcel_id = $id;
@@ -2275,7 +2244,6 @@ class ParcelRepository implements ParcelInterface
                 $vat->date = date('Y-m-d H:i:s');
                 $vat->note = __('parcel.partial_delivered_success');
                 $vat->save();
-
             }
 
             if ($request->send_sms_customer == 'on') {
@@ -2303,7 +2271,6 @@ class ParcelRepository implements ParcelInterface
                 $msgNotification = 'Dear ' . $parcel->merchant->business_name . ', your  parcel with ID ' . $parcel->tracking_id . ' is Partials Delivered. Customer ' . $parcel->customer_name . ', ' . $parcel->customer_phone . ' taking amount(' . $parcel->cash_collection . ')  Track here: ' . url('/') . ' -' . settings()->name;
                 app(PushNotificationService::class)->sendStatusPushNotification($parcel, $parcel->merchant->user->email, $msgNotification, 'merchant');
             } catch (\Exception $exception) {
-
             }
 
             return true;
@@ -2399,7 +2366,6 @@ class ParcelRepository implements ParcelInterface
                 $deliveryManBalance = DeliveryMan::find($deliveryMan->id);
                 $deliveryManBalance->current_balance = $deliveryManBalance->current_balance + $old_cash_collection;
                 $deliveryManBalance->save();
-
             } else {
 
                 $deliveryManAssign = ParcelEvent::where(['parcel_id' => $id, 'parcel_status' => ParcelStatus::DELIVERY_MAN_ASSIGN])->first();
@@ -2443,7 +2409,6 @@ class ParcelRepository implements ParcelInterface
                 $deliveryManBalance = DeliveryMan::find($deliveryMan->id);
                 $deliveryManBalance->current_balance = $deliveryManBalance->current_balance + $old_cash_collection;
                 $deliveryManBalance->save();
-
             }
 
             //merchant statment
@@ -2464,7 +2429,7 @@ class ParcelRepository implements ParcelInterface
             }
 
             //merchant expense vat + total charge amount
-            if ($parcel->parcel_payment_method == ParcelPaymentMethod::COD)://without wallet payment
+            if ($parcel->parcel_payment_method == ParcelPaymentMethod::COD): //without wallet payment
                 //total delivery charge
                 $merchantStatement = new MerchantStatement();
                 $merchantStatement->parcel_id = $id;
@@ -2510,7 +2475,6 @@ class ParcelRepository implements ParcelInterface
             $parcel->partial_delivered = BooleanStatus::NO;
             $parcel->save();
             return true;
-
         } catch (\Throwable $th) {
             return false;
         }
@@ -2741,7 +2705,6 @@ class ParcelRepository implements ParcelInterface
                     $msgNotification = 'Dear ' . $pickupAsisgn->pickupman->user->name . ', Please pickup parcel with ID ' . $parcel->tracking_id . ' parcel from (' . $parcel->merchant->business_name . ',' . $parcel->merchant->user->mobile . ',' . $parcel->merchant->address . ') within ' . dateFormat($parcel->pickup_date) . ' -' . settings()->name;
                     app(PushNotificationService::class)->sendStatusPushNotification($parcel, $pickupAsisgn->pickupman->user->email, $msgNotification, 'deliveryMan');
                 } catch (\Exception $exception) {
-
                 }
                 if ($request->send_sms_merchant == 'on') {
                     if (session()->has('locale') && session()->get('locale') == 'bn'):
@@ -2753,12 +2716,9 @@ class ParcelRepository implements ParcelInterface
                 }
             }
             return true;
-
         } catch (\Throwable $th) {
             return false;
         }
-
-
     }
     public function AssignReturnToMerchantBulk($request)
     {
@@ -2810,7 +2770,6 @@ class ParcelRepository implements ParcelInterface
                     endif;
                     $response = app(SmsService::class)->sendSms($parcel->merchant->user->mobile, $msg);
                 }
-
             }
             return true;
         } catch (\Throwable $th) {
@@ -2852,7 +2811,6 @@ class ParcelRepository implements ParcelInterface
                 $query->where('business_name', 'Like', '%' . $request->search . '%');
             })
             ->paginate(10);
-
     }
 
 
@@ -2864,7 +2822,4 @@ class ParcelRepository implements ParcelInterface
     {
         return Parcel::whereIn('id', $request->parcels)->with('merchant', 'merchant.user', 'merchantShop', 'deliveryCategory', 'packaging')->get();
     }
-
-
-
 }
