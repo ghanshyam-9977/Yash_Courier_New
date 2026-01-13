@@ -41,21 +41,18 @@ jobs:
               echo "⚠ npm not installed, skipping frontend build"
             fi
 
-            
-            echo "🔧 Laravel maintenance"
-            php artisan down || true
-            php artisan config:clear
-            php artisan cache:clear
-            php artisan optimize:clear
-            php artisan migrate --force || true
-            php artisan config:cache
-            php artisan route:clear
-            php artisan view:clear
+
+            echo "🔧 Laravel maintenance (run as www-data)"
+            sudo -u www-data php artisan down || true
+            sudo -u www-data php artisan optimize:clear
+            sudo -u www-data php artisan migrate --force || true
+            sudo -u www-data php artisan config:cache
+            sudo -u www-data php artisan route:clear
+            sudo -u www-data php artisan view:clear
+            sudo -u www-data php artisan up
 
             echo "♻ Reloading PHP-FPM"
             sudo systemctl reload php8.2-fpm || sudo systemctl reload php-fpm
-
-            php artisan up
 
             echo "✅ Deployment successful"
 
