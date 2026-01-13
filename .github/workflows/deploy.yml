@@ -1,4 +1,4 @@
-name: Deploy Yash Courier (Laravel)
+name: Deploy Laravel App to Server
 
 on:
   push:
@@ -10,49 +10,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to EC2 via SSH
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            set -e
+            cd ${{ secrets.APP_PATH }}
 
-            cd /var/www/yash
-
-            echo "🔐 Fix permissions FIRST"
-            sudo chown -R www-data:www-data storage bootstrap/cache
-            sudo chmod -R 775 storage bootstrap/cache
-
-            echo "🚀 Pulling latest code"
+            echo "🔄 Pulling latest code"
             git pull origin main
 
             echo "📦 Installing PHP dependencies"
-            sudo -u www-data /usr/local/bin/composer install --no-dev -o
+            composer install --no-dev --optimize-autoloader
 
-            echo "🎨 Building frontend (if npm exists)"
-            if command -v npm >/dev/null 2>&1; then
-              if [ -f package.json ]; then
-                npm install
-                npm run build
-              fi
-            else
-              echo "⚠ npm not installed, skipping frontend build"
-            fi
+            echo "🧹 Clearing & caching config"
+            php artisan config:clear
+            php artisan config:cache
+            php artisan route:clear
+            php artisan view:clear
 
+            echo "🔐 Fixing permissions"
+            chown -R www-data:www-data storage bootstrap/cache
+            chmod -R 775 storage bootstrap/cache
 
-            echo "🔧 Laravel maintenance (run as www-data)"
-            sudo -u www-data php artisan down || true
-            sudo -u www-data php artisan optimize:clear
-            sudo -u www-data php artisan migrate --force || true
-            sudo -u www-data php artisan config:cache
-            sudo -u www-data php artisan route:clear
-            sudo -u www-data php artisan view:clear
-            sudo -u www-data php artisan up
-
-            echo "♻ Reloading PHP-FPM"
-            sudo systemctl reload php8.2-fpm || sudo systemctl reload php-fpm
-
-            echo "✅ Deployment successful"
-
+            echo "✅ Deployment complete"
