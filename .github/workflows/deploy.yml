@@ -18,8 +18,12 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e
-
+ 
             cd /var/www/yash
+
+            echo "🔐 Fix permissions FIRST"
+            sudo chown -R www-data:www-data storage bootstrap/cache
+            sudo chmod -R 775 storage bootstrap/cache
 
             echo "🚀 Pulling latest code"
             git pull origin main
@@ -38,13 +42,10 @@ jobs:
             php artisan optimize:clear
             php artisan optimize
 
-            echo "🔐 Fix permissions"
-            sudo chown -R www-data:www-data storage bootstrap/cache
-            sudo chmod -R 775 storage bootstrap/cache
-
             echo "♻ Reloading PHP-FPM"
             sudo systemctl reload php8.2-fpm || sudo systemctl reload php-fpm
 
             php artisan up
 
             echo "✅ Deployment successful"
+
