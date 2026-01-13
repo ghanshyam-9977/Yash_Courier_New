@@ -162,7 +162,7 @@ return [
 
          Maatwebsite\Excel\ExcelServiceProvider::class,
          RealRashid\SweetAlert\SweetAlertServiceProvider::class,
-         Barryvdh\Debugbar\ServiceProvider::class,
+         //Barryvdh\Debugbar\ServiceProvider::class,
          Milon\Barcode\BarcodeServiceProvider::class, 
          Brian2694\Toastr\ToastrServiceProvider::class,
          Cartalyst\Stripe\Laravel\StripeServiceProvider::class ,
