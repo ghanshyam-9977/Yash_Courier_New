@@ -31,12 +31,17 @@ jobs:
             echo "📦 Installing PHP dependencies"
             composer install --no-dev -o --no-scripts
 
-            echo "🎨 Building frontend"
-            if [ -f package.json ]; then
-              npm install
-              npm run build
+            echo "🎨 Building frontend (if npm exists)"
+            if command -v npm >/dev/null 2>&1; then
+              if [ -f package.json ]; then
+                npm install
+                npm run build
+              fi
+            else
+              echo "⚠ npm not installed, skipping frontend build"
             fi
 
+            
             echo "🔧 Laravel maintenance"
             php artisan down || true
             php artisan config:clear
