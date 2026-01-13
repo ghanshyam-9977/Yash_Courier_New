@@ -29,7 +29,7 @@ jobs:
             git pull origin main
 
             echo "📦 Installing PHP dependencies"
-            sudo -u www-data composer install --no-dev -o
+            sudo -u www-data /usr/local/bin/composer install --no-dev -o
 
             echo "🎨 Building frontend (if npm exists)"
             if command -v npm >/dev/null 2>&1; then
