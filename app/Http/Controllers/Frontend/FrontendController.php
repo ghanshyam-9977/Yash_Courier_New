@@ -61,10 +61,13 @@ class FrontendController extends Controller
 
     public function tracking(Request $request)
     {
+        // dd($request->all());
+        
         $parcel = $this->parcelRepo->parcelTracking($request);
         $parcelevents = $this->parcelRepo->parcelEvents($parcel->id ?? null);
         $parcelItems = $this->parcelRepo->parcelItems($parcel->barcode ?? null);
         return view('frontend.pages.tracking', compact('parcelevents', 'parcel', 'parcelItems', 'request'));
+
     }
 
 
@@ -93,10 +96,10 @@ class FrontendController extends Controller
     }
     public function branchList()
     {
-         $hubs = Hub::where('status', 1)
+        $hubs = Hub::where('status', 1)
             ->select('id', 'name', 'phone', 'address', 'city', 'pincode')
             ->get();
-        return view('frontend.pages.branchList',compact('hubs'));
+        return view('frontend.pages.branchList', compact('hubs'));
     }
 
 

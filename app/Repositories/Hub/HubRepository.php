@@ -3,16 +3,28 @@
 namespace App\Repositories\Hub;
 
 use App\Models\Backend\Hub;
+use App\Models\Backend\HubRateSlab;
+use App\Models\Backend\HubServiceArea;
 use App\Models\Backend\Parcel;
 use App\Repositories\Hub\HubInterface;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class HubRepository implements HubInterface
 {
+    // public function all()
+    // {
+    //     return Hub::orderByDesc('id')->paginate(10);
+    // }
+
     public function all()
     {
-        return Hub::orderByDesc('id')->paginate(10);
+        return Hub::with(['serviceAreas', 'rateSlabs'])
+            ->orderByDesc('id')
+            ->paginate(10);
     }
+
     public function filter($request)
     {
         return Hub::where(function ($query) use ($request) {
@@ -33,71 +45,168 @@ class HubRepository implements HubInterface
         return Hub::find($id);
     }
 
+
     public function store($request)
     {
+        DB::beginTransaction();
+
         try {
-            $hub           = new Hub();
-            $hub->name     = $request->name;
-            $hub->phone    = $request->phone;
-            $hub->address  = $request->address;
-            $hub->city     = $request->city;
-            $hub->state     = $request->state;
-            $hub->contact_person = $request->contact_person;
-            $hub->pincode = $request->pincode;
-            $hub->hub_lat  = $request->lat;
-            $hub->hub_long = $request->long;
-            $hub->status   = $request->status;
-            if (isset($request->item_type)) {
-                $hub->item_type = $request->item_type;
+
+            /* =========================
+         * 1️⃣ HUB MASTER SAVE
+         * ========================= */
+            $hub = Hub::create([
+                'name'            => $request->name,
+                'phone'           => $request->phone,
+                'state'           => $request->state,
+                'city'            => $request->city,
+                'address'         => $request->address,
+                'contact_person'  => $request->contact_person,
+                'pincode'         => $request->pincode,
+                'hub_lat'         => $request->hub_lat,
+                'hub_long'        => $request->hub_long,
+
+                'item_type'       => $request->item_type,
+                'transport_type'  => $request->transport_type,
+                'weight_unit'     => $request->weight_unit,
+                'rate_type'       => $request->rate_type,
+
+                'gst_withdrawn'   => $request->has('gst_withdrawn') ? 1 : 0,
+                'cgst'            => $request->cgst,
+                'sgst'            => $request->sgst,
+                'igst'            => $request->igst,
+
+                'status'          => $request->status,
+                'opening_balance' => 0,
+                'current_balance' => 0,
+            ]);
+
+            /* =========================
+         * 2️⃣ SERVICE AREAS SAVE
+         * ========================= */
+            if ($request->has('service_cities')) {
+                // service_cities is an array of arrays indexed by the service area index.
+                // We also accept service_states[...] inputs (added in the form) so each
+                // service area can have its own state. Fall back to hub state if missing.
+                foreach ($request->service_cities as $index => $cities) {
+                    $serviceState = $request->input("service_states.$index", $request->state);
+                    foreach ($cities as $city) {
+                        HubServiceArea::create([
+                            'hub_id' => $hub->id,
+                            'state'  => $serviceState,
+                            'city'   => $city,
+                        ]);
+                    }
+                }
             }
 
-            if (isset($request->transport_type)) {
-                $hub->transport_type = $request->transport_type;
+            /* =========================
+         * 3️⃣ RATE SLABS SAVE
+         * ========================= */
+            if ($request->has('slabs')) {
+                foreach ($request->slabs as $slab) {
+                    HubRateSlab::create([
+                        'hub_id'     => $hub->id,
+                        'min_weight' => $slab['min'],
+                        'max_weight' => $slab['max'],
+                        'rate'       => $slab['rate'],
+                        'unit'       => $request->weight_unit,
+                    ]);
+                }
             }
 
-            if (isset($request->unit)) {
-                $hub->unit = $request->unit;
-            }
-
-            if (isset($request->description)) {
-                $hub->description = $request->description;
-            }
-
-            if (isset($request->cgst)) {
-                $hub->cgst = $request->cgst;
-            }
-
-            if (isset($request->sgst)) {
-                $hub->sgst = $request->sgst;
-            }
-            if (isset($request->rate)) {
-                $hub->rate = $request->rate;
-            }
-            if (isset($request->quantity)) {
-                $hub->quantity = $request->quantity;
-            }
-            $hub->save();
+            DB::commit();
             return true;
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Hub Store Error: ' . $e->getMessage());
             return false;
         }
     }
-    public function update($id, $request)
+
+
+
+    public function update($request, $id)
     {
+        DB::beginTransaction();
+
         try {
-            $hub           = Hub::find($id);
-            $hub->name     = $request->name;
-            $hub->phone    = $request->phone;
-            $hub->address  = $request->address;
-            $hub->hub_lat  = $request->lat;
-            $hub->hub_long = $request->long;
-            $hub->status   = $request->status;
-            $hub->save();
+
+            /* =========================
+         * 1️⃣ HUB MASTER UPDATE
+         * ========================= */
+            $hub = Hub::findOrFail($id);
+
+            $hub->update([
+                'name'            => $request->name,
+                'phone'           => $request->phone,
+                'state'           => $request->state,
+                'city'            => $request->city,
+                'address'         => $request->address,
+                'contact_person'  => $request->contact_person,
+                'pincode'         => $request->pincode,
+                'hub_lat'         => $request->hub_lat,
+                'hub_long'        => $request->hub_long,
+
+                'item_type'       => $request->item_type,
+                'transport_type'  => $request->transport_type,
+                'weight_unit'     => $request->weight_unit,
+                'rate_type'       => $request->rate_type,
+
+                'gst_withdrawn'   => $request->has('gst_withdrawn') ? 1 : 0,
+                'cgst'            => $request->has('gst_withdrawn') ? $request->cgst : null,
+                'sgst'            => $request->has('gst_withdrawn') ? $request->sgst : null,
+                'igst'            => $request->has('gst_withdrawn') ? $request->igst : null,
+
+                'status'          => $request->status,
+            ]);
+
+            /* =========================
+         * 2️⃣ SERVICE AREAS UPDATE
+         * (DELETE + INSERT)
+         * ========================= */
+            HubServiceArea::where('hub_id', $hub->id)->delete();
+
+            if ($request->has('service_cities')) {
+                foreach ($request->service_cities as $index => $cities) {
+                    $serviceState = $request->input("service_states.$index", $request->state);
+                    foreach ($cities as $city) {
+                        HubServiceArea::create([
+                            'hub_id' => $hub->id,
+                            'state'  => $serviceState,
+                            'city'   => $city,
+                        ]);
+                    }
+                }
+            }
+
+            /* =========================
+         * 3️⃣ RATE SLABS UPDATE
+         * (DELETE + INSERT)
+         * ========================= */
+            HubRateSlab::where('hub_id', $hub->id)->delete();
+
+            if ($request->has('slabs')) {
+                foreach ($request->slabs as $slab) {
+                    HubRateSlab::create([
+                        'hub_id'     => $hub->id,
+                        'min_weight' => $slab['min'],
+                        'max_weight' => $slab['max'],
+                        'rate'       => $slab['rate'],
+                        'unit'       => $request->weight_unit,
+                    ]);
+                }
+            }
+
+            DB::commit();
             return true;
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Hub Update Error: ' . $e->getMessage());
             return false;
         }
     }
+
 
     public function delete($id)
     {

@@ -81,7 +81,7 @@ class BranchPaymentGet extends Model
         'unit',
         'quantity'
     ];
-}
+}   
 
 
 

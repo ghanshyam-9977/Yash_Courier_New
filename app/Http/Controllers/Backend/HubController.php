@@ -13,13 +13,20 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Requests\Hub\StoreHubRequest;
 use App\Http\Requests\Hub\UpdateHubRequest;
+use App\Models\Backend\DrsEntry;
+use App\Models\Backend\DrsShipment;
+use App\Models\Backend\FastBooking;
+use App\Models\Backend\FastBookingItem;
 use App\Models\Backend\Parcel;
 use App\Repositories\Hub\HubInterface;
 use App\Models\BranchPaymentGet;
 use App\Repositories\HubManage\HubPayment\HubPaymentInterface;
 use Brian2694\Toastr\Facades\Toastr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class HubController extends Controller
 {
@@ -35,6 +42,9 @@ class HubController extends Controller
     public function index(Request $request)
     {
         $hubs = $this->repo->all();
+        Log::info('Hub index loaded', [
+            'data'  => $hubs
+        ]);
         return view('backend.hub.index', compact('hubs', 'request'));
     }
 
@@ -60,6 +70,417 @@ class HubController extends Controller
 
         return view('backend.hub.branch', compact('payments', 'hubs', 'allBranches', 'request'));
     }
+
+
+    public function drx_index(Request $request)
+    {
+        $drsEntries = DrsEntry::with([
+            'shipments',
+            'deliveryMan.user' // user relation bhi load hogi
+        ])
+            ->orderBy('id', 'desc')
+            ->paginate(10);
+
+        return view('backend.drs.drs', compact('drsEntries', 'request'));
+    }
+
+    public function fastbooking_index(Request $request)
+    {
+        $query = FastBooking::with([
+            'items',
+            'sourceHub',
+            'destinationHub'
+        ]);
+
+        // 🔍 Search
+        if ($search = $request->input('search')) {
+            $query->where('booking_no', 'like', "%{$search}%")
+                ->orWhereHas('sourceHub', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })
+                ->orWhereHas('destinationHub', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                });
+        }
+
+        // 📅 Date filter
+        if ($fromDate = $request->input('from_date')) {
+            $query->whereDate('created_at', '>=', $fromDate);
+        }
+
+        if ($toDate = $request->input('to_date')) {
+            $query->whereDate('created_at', '<=', $toDate);
+        }
+
+        $fastBookings = $query
+            ->orderBy('created_at', 'desc')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('backend.fastbooking.index', compact('fastBookings', 'request'));
+    }
+
+
+
+    public function fastbooking_create(Request $request)
+    {
+        $branches = Hub::all();
+        $networks = [
+            'DTDC',
+            'Blue Dart',
+            'Delhivery',
+            'XpressBees',
+            'Ecom Express',
+            'Amazon Transport',
+            'Shadowfax',
+            'Ekart',
+        ];
+        return view('backend.fastbooking.create', compact('branches', 'networks'));
+    }
+
+
+    public function fastbooking_store(Request $request)
+    {
+        $request->validate([
+            'booking_no'                 => 'required',
+            'from_branch_id'             => 'required',
+            'to_branch_id'               => 'required',
+            'network'                    => 'required',
+            'payment_type'               => 'required',
+
+            'items.tracking_no.*'        => 'required|distinct|unique:fast_booking_items,tracking_no',
+            'items.receiver_name.*'      => 'required',
+            'items.address.*'            => 'required',
+            'items.pcs.*'                => 'required|integer|min:1',
+            'items.weight.*'             => 'required|numeric|min:0.01',
+            'items.amount.*'             => 'required|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+
+            /* ---------- CALCULATE TOTALS ---------- */
+            $totalPcs = array_sum($request->items['pcs']);
+            $totalWeight = array_sum($request->items['weight']);
+            $totalAmount = array_sum($request->items['amount']);
+
+            /* ---------- FAST BOOKING (MASTER) ---------- */
+            $booking = FastBooking::create([
+                'booking_no'     => $request->booking_no,
+                'from_branch_id' => $request->from_branch_id,
+                'to_branch_id'   => $request->to_branch_id,
+                'network'        => $request->network,
+                'payment_type'   => $request->payment_type,
+                'slip_no'        => $request->slip_no,
+                'total_pcs'      => $totalPcs,
+                'total_weight'   => $totalWeight,
+                'total_amount'   => $totalAmount,
+                'remark'         => $request->remark,
+            ]);
+
+            /* ---------- FAST BOOKING ITEMS ---------- */
+            foreach ($request->items['tracking_no'] as $index => $trackingNo) {
+                FastBookingItem::create([
+                    'fast_booking_id' => $booking->id,
+                    'tracking_no'     => $trackingNo,
+                    'receiver_name'   => $request->items['receiver_name'][$index],
+                    'address'         => $request->items['address'][$index],
+                    'pcs'             => $request->items['pcs'][$index],
+                    'weight'          => $request->items['weight'][$index],
+                    'amount'          => $request->items['amount'][$index],
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Fast Booking created successfully',
+                'redirect' => route('fast_bookings.index'),
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+
+    public function fastbooking_edit($id)
+    {
+        $booking = FastBooking::with('items')->findOrFail($id);
+        $branches = Hub::all();
+        $networks = [
+            'DTDC',
+            'Blue Dart',
+            'Delhivery',
+            'XpressBees',
+            'Ecom Express',
+            'Amazon Transport',
+            'Shadowfax',
+            'Ekart',
+        ];
+
+        return view('backend.fastbooking.create', compact('booking', 'branches', 'networks'));
+    }
+
+    public function fastbooking_update(Request $request, $id)
+    {
+        $request->validate([
+            'tracking_no'   => 'required', // edit me unique nahi
+            'from_station'  => 'required',
+            'network'       => 'required',
+            'receiver_name' => 'required',
+            'address'       => 'required',
+            'pieces'        => 'required|integer',
+            'weight'        => 'required|numeric',
+            'paid_amount'   => 'required|numeric',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+
+            // 🔹 MASTER BOOKING
+            $booking = FastBooking::findOrFail($id);
+
+            $booking->update([
+                'from_branch_id' => 5, // abhi demo
+                'to_branch_id'   => 6,
+                'network_id'     => null,
+                'payment_type'   => ($request->cod_amount > 0) ? 'COD' : 'CASH',
+                'total_pcs'      => $request->pieces,
+                'total_weight'   => $request->weight,
+                'total_amount'   => $request->paid_amount,
+                'cod_amount'     => $request->cod_amount ?? 0,
+                'remark'         => $request->remark,
+            ]);
+
+            // 🔹 ITEM (single tracking)
+            $item = FastBookingItem::where('fast_booking_id', $booking->id)->firstOrFail();
+
+            $item->update([
+                // tracking_no edit me readonly hai isliye update nahi
+                'receiver_name' => $request->receiver_name,
+                'address'       => $request->address,
+                'pcs'           => $request->pieces,
+                'weight'        => $request->weight,
+                'amount'        => $request->paid_amount,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'Fast Booking updated successfully',
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status'  => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function fastbooking_view(Request $request) {}
+
+    public function fastbooking_delete(Request $request) {}
+
+    public function drs_create()
+    {
+        $deliveryBoys = DeliveryMan::with('user')->where('status', 1)->get();
+        $deliveryBoysData = $deliveryBoys->map(function ($boy) {
+            return [
+                'id' => $boy->id,
+                'user_id' => $boy->user_id,
+                'name' => $boy->user->name ?? 'N/A',
+                'status' => $boy->status,
+            ];
+        });
+        Log::info('delivery_boys with names', ['data' => $deliveryBoysData]);
+
+        $areas = Hub::where('status', 1)->pluck('name')->toArray();
+
+        return view('backend.drs.create', compact('deliveryBoys', 'areas'));
+    }
+
+    public function printShipper()
+    {
+        // Fetch data, prepare print view for shipper
+        $fastBookings = FastBooking::paginate(20); // ya apne hisaab se
+        return view('fast_bookings.print_shipper', compact('fastBookings'));
+    }
+
+
+    public function printSticker()
+    {
+        $fastBookings = FastBookingItem::all();
+
+        $generator = new BarcodeGeneratorPNG();
+
+        foreach ($fastBookings as $booking) {
+
+            $trackingNo = (string) $booking->tracking_no;
+
+            $barcodeData = $generator->getBarcode(
+                $trackingNo,
+                $generator::TYPE_CODE_128
+            );
+
+            $fileName = 'barcodes/' . $trackingNo . '.png';
+
+            Storage::disk('public')->put($fileName, $barcodeData);
+
+            $booking->barcode_image = $fileName;
+            // $booking->save();
+        }
+
+        return view('backend.fastbooking.print_sticker', compact('fastBookings'));
+    }
+
+
+    public function drs_store(Request $request)
+    {
+        $request->validate([
+            'drs_no'          => 'required|unique:drs_entries,drs_no',
+            'date'            => 'required|date',
+            'time'            => 'required',
+            'shipments'       => 'required|array|min:1',
+            'shipments.*.tracking_no' => 'required|string',
+            'shipments.*.pincode' => 'required|string',
+            'shipments.*.area' => 'required|string',
+            'shipments.*.receiver_name' => 'required|string',
+            'shipments.*.delivery_boy_id' => 'required|exists:delivery_man,id',
+            'shipments.*.weight' => 'nullable|numeric|min:0',
+            'shipments.*.pieces' => 'required|integer|min:1',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // ✅ 1. Insert DRS Entry
+            $drs = DrsEntry::create([
+                'drs_no'           => $request->drs_no,
+                'area_name'        => $request->shipments[0]['area'], // Use first shipment's area
+                'drs_date'         => $request->date,
+                'drs_time'         => $request->time,
+                'delivery_boy_id'  => $request->shipments[0]['delivery_boy_id'], // Use first shipment's delivery boy
+                'pincode'          => $request->shipments[0]['pincode'], // Use first shipment's pincode
+                'total_shipments'  => count($request->shipments),
+            ]);
+
+            // ✅ 2. Insert Shipments
+            foreach ($request->shipments as $shipment) {
+                DrsShipment::create([
+                    'drs_entry_id'   => $drs->id,
+                    'tracking_no'    => $shipment['tracking_no'],
+                    'booking_station' => $shipment['area'], // Assuming area is booking station
+                    'weight'         => $shipment['weight'] ?? 0,
+                    'pcs'            => $shipment['pieces'],
+                    'receiver_name'  => $shipment['receiver_name'],
+                    'address'        => $shipment['area'], // Assuming area as address for now
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'DRS entry with ' . count($request->shipments) . ' shipments added successfully!',
+                'redirect' => route('drs.index')
+            ]);
+
+
+            // return response()->json([
+            //     'success' => true,
+            //     'message' => 'DRS entry with ' . count($request->shipments) . ' shipments added successfully!',
+            // ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getEntriesData()
+    {
+        $entries = DrsEntry::with('deliveryBoy')->latest()->get();
+
+        // Area wise shipments count
+        $areaStats = $entries->groupBy('area')
+            ->map(fn($group) => $group->sum('total_shipments'))
+            ->toArray();
+
+        // Delivery boy wise shipments
+        $boyStats = $entries->groupBy('delivery_boy_id')
+            ->map(fn($group) => [
+                'boy_name' => $group->first()->deliveryBoy->name,
+                'count' => $group->count(),
+                'shipments' => $group->sum('total_shipments')
+            ])
+            ->toArray();
+
+        return response()->json([
+            'area_stats' => $areaStats,
+            'boy_stats' => $boyStats,
+            'total_entries' => $entries->count(),
+            'total_shipments' => $entries->sum('total_shipments'),
+            'entries' => $entries
+        ]);
+    }
+
+    public function drs_view()
+    {
+        // return view('backend.drs.create');
+    }
+    public function drs_edit($id)
+    {
+        $drs = DrsEntry::with('shipments')->findOrFail($id);
+        logger()->info('DRS Edit', [
+            'DATA' => $drs
+        ]);
+        return view('backend.drs.update', compact('drs'));
+    }
+    public function drs_update(Request $request, $id)
+    {
+        $request->validate([
+            'drs_status'    => 'required|in:out_for_delivery,delivered,undelivered',
+            'delivery_date' => 'nullable|date',
+            'remarks'       => 'nullable|string|max:255',
+        ]);
+
+        $drs = DrsEntry::findOrFail($id);
+
+        $drs->drs_status    = $request->drs_status;
+        $drs->delivery_date = $request->delivery_date ?? Carbon::now()->toDateString();
+        $drs->remarks       = $request->remarks;
+        $drs->updated_by    = auth()->id(); // login user
+        $drs->is_closed     = ($request->drs_status == 'delivered') ? 1 : 0;
+
+        $drs->save();
+
+        return redirect()
+            ->route('drs.index')
+            ->with('success', 'DRS updated successfully');
+    }
+    public function drs_remove()
+    {
+        // return view('backend.drs.create');
+    }
+
+
 
     public function branchfilter(Request $request)
     {
@@ -163,7 +584,7 @@ class HubController extends Controller
     }
 
 
-    public function store(StoreHubRequest $request)
+    public function store(Request $request)
     {
 
         // dd($request->all());
@@ -177,28 +598,45 @@ class HubController extends Controller
     }
 
 
+    // public function edit($id)
+    // {
+    //     $hub = Hub::find($id);
+    //     Log::info('branch_data', ['data' => $hub]);
+
+    //     if (!$hub) {
+    //         abort(404, 'Hub not found');
+    //     }
+
+    //     return view('backend.hub.branch-edit', compact('hub'));
+    // }
+
     public function edit($id)
     {
-        $hub = Hub::find($id);
-        Log::info('branch_data', ['data' => $hub]);
+        $hub = Hub::with(['serviceAreas', 'rateSlabs'])->find($id);
 
         if (!$hub) {
             abort(404, 'Hub not found');
         }
 
+        Log::info('branch_data', ['data' => $hub]);
+
         return view('backend.hub.branch-edit', compact('hub'));
     }
 
-    public function update(UpdateHubRequest $request)
+
+    public function update(Request $request, $id)
     {
-        if ($this->repo->update($request->id, $request)) {
-            Toastr::success(__('hub.update_msg'), __('message.success'));
+        // dd($request->all());
+
+        if ($this->repo->update($request, $id)) {
+            Toastr::success(__('hub.updated_msg'), __('message.success'));
             return redirect()->route('hubs.index');
         } else {
             Toastr::error(__('hub.error_msg'), __('message.error'));
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
+
 
     public function destroy($id)
     {
@@ -265,35 +703,56 @@ class HubController extends Controller
     {
         $hubs = Hub::all()->keyBy('id');
 
-        // OUT Records - where request_type = 'out'
-        $outQuery = BranchPaymentGet::where('request_type', 'out');
+        $outRecords = collect();
+        $inRecords = collect();
 
-        // IN Records - where request_type = 'in'
-        $inQuery = BranchPaymentGet::where('request_type', 'in');
+        $fromBranch = null;
+        $toBranch = null;
+        $inFromBranch = null;
+        $receiveBranch = null;
+        $manifestNo = null;
 
-        // Apply filters to both queries
-        if ($request->from_branch) {
-            $outQuery->where('from_branch_id', $request->from_branch);
-            $inQuery->where('from_branch_id', $request->from_branch);
+        if ($request->type === 'out') {
+            // Show filtered OUT manifest after user selects branches
+            $outQuery = BranchPaymentGet::where('request_type', 'out');
+
+            if ($request->from_branch) {
+                $outQuery->where('from_branch_id', $request->from_branch);
+                $fromBranch = $hubs->has($request->from_branch) ? $hubs->get($request->from_branch)->name : null;
+            }
+            if ($request->to_branch) {
+                $outQuery->where('to_branch_id', $request->to_branch);
+                $toBranch = $hubs->has($request->to_branch) ? $hubs->get($request->to_branch)->name : null;
+            }
+
+            $outRecords = $outQuery->get();
+            $manifestNo = $outRecords->first()?->manifest_no;
+        } elseif ($request->type === 'in') {
+            $inQuery = BranchPaymentGet::where('request_type', 'in');
+
+            if ($request->from_branch) {
+                $inQuery->where('from_branch_id', $request->from_branch);
+                $fromBranch = $hubs->has($request->from_branch) ? $hubs->get($request->from_branch)->name : null;
+            }
+            if ($request->to_branch) {
+                $inQuery->where('to_branch_id', $request->to_branch);
+                $toBranch = $hubs->has($request->to_branch) ? $hubs->get($request->to_branch)->name : null;
+            }
+            $inRecords = $inQuery->get();
+            $manifestNo = $inRecords->first()?->manifest_no;
         }
-        if ($request->transport_type) {
-            $outQuery->where('transport_type', $request->transport_type);
-            $inQuery->where('transport_type', $request->transport_type);
-        }
 
-        $outRecords = $outQuery->get();
-        $inRecords = $inQuery->get();
-
-        // Log the filtered data
-        Log::info('estimate-filtered-data', [
-            'from_branch' => $request->from_branch,
-            'transport_type' => $request->transport_type,
-            'out_records_count' => $outRecords->count(),
-            'in_records_count' => $inRecords->count()
-        ]);
-
-        return view('backend.hub.branch-estimate', compact('outRecords', 'inRecords', 'hubs'));
+        return view('backend.hub.branch-estimate', compact(
+            'outRecords',
+            'inRecords',
+            'hubs',
+            'fromBranch',
+            'toBranch',
+            'manifestNo'
+        ));
     }
+
+
     public function estimatePerDay(Request $request)
     {
         $hubs = Hub::all()->keyBy('id');
@@ -471,5 +930,56 @@ class HubController extends Controller
         Log::info('Total hubs Found', ['data' => $hubs]);
 
         return view('backend.hub.branch-estimate-all', compact('hubs'));
+    }
+
+    public function drs_estimate(Request $request)
+    {
+        $drsEntries = DrsEntry::with(['shipments', 'deliveryMan.user'])
+            ->orderBy('drs_date', 'desc')
+            ->get();
+
+
+
+        return view('backend.drs.drs_estimate', compact('drsEntries'));
+    }
+
+
+    public function estimate_data(Request $request)
+    {
+        logger()->info('Estimate data call api');
+
+        $drsNo = $request->input('drs_no');
+
+        $drsEntry = DrsEntry::with(['shipments', 'deliveryMan.user'])
+            ->where('drs_no', $drsNo)
+            ->first();
+
+        if (!$drsEntry) {
+            return response()->json(['error' => 'DRS नंबर नहीं मिला'], 404);
+        }
+
+        $data = [
+            'drs_no' => $drsEntry->drs_no,
+            'drs_date' => $drsEntry->drs_date->format('d/m/Y'),
+            'drs_time' => $drsEntry->created_at->format('h:i A'),
+            'area_name' => $drsEntry->area_name,
+            'branch' => optional($drsEntry->branch)->name,
+            'delivery_boy_name' => optional($drsEntry->deliveryMan->user)->name,
+            'contact_person' => optional($drsEntry->branch)->contact_person,
+            'shipments' => $drsEntry->shipments->map(function ($shipment, $index) {
+                return [
+                    'sno' => $index + 1,
+                    'tracking' => $shipment->tracking_no,
+                    'weight' => $shipment->weight,
+                    'pcs' => $shipment->pcs,
+                    // 'cod' => $shipment->cod_amount,
+                    'stamp' => $shipment->stamp_name
+                ];
+            })->toArray()
+        ];
+
+        logger()->info('DRS Entry Data:', ['data' => $data]);
+
+        return response()->json($data);
     }
 }

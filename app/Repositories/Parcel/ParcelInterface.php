@@ -8,6 +8,7 @@ interface ParcelInterface {
     public function filter($request);
     public function get($id);
     public function parcelEvents($id);
+    public function getParcelByTrackingNumber($id);
     public function parcelItems($id);
     public function parcelTracking($request);
     public function details($id);

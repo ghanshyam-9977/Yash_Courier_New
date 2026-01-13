@@ -134,8 +134,8 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
         Route::get('/', 'index')->name('home');
         Route::get('/tracking', 'tracking')->name('tracking.index');
         Route::get('/about-us', 'aboutUs')->name('aboutus.index');
-	Route::get('/our-services', 'ourServices')->name('services.index');
-	Route::get('/pincode-list', 'pincodeList')->name('pincode.index');
+        Route::get('/our-services', 'ourServices')->name('services.index');
+        Route::get('/pincode-list', 'pincodeList')->name('pincode.index');
         Route::get('/branch-list', 'branchList')->name('branchlist.index');
         Route::get('/privacy-and-policy', 'privacyPolicy')->name('privacy.policy.index');
         Route::get('/terms-of-condition', 'termsOfCondition')->name('termsof.condition.index');
@@ -208,10 +208,31 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
 
 
                 Route::post('hub-branch-payments/{id}', [HubPaymentRequestController::class, 'update_branchss'])->name('hub-branch-payments.done');
-                Route::post('hub-branch-update-request/{id}', [HubPaymentRequestController::class, 'update_branch_request'])->name('hub-branch-request-update.done');
+                // Route::post('hub-branch-update-request/{id}', [HubPaymentRequestController::class, 'update_branch_request'])->name('hub-branch-request-update.done');
                 Route::get('hubs', [HubController::class, 'index'])->name('hubs.index')->middleware(middleware: 'hasPermission:hub_read');
-                Route::get('hubs/branch', [HubController::class, 'branch_index'])->name('hubs.branch.index');
                 Route::get('hubs/filter', [HubController::class, 'filter'])->name('hubs.filter')->middleware('hasPermission:hub_read');
+                Route::get('hubs/branch', [HubController::class, 'branch_index'])->name('hubs.branch.index');
+                Route::post('/drs/store', [HubController::class, 'drs_store'])->name('drs.store');
+                Route::get('drs/branch', [HubController::class, 'drx_index'])->name('drs.index');
+                Route::get('/drs/create', [HubController::class, 'drs_create'])->name('drs.create');
+                Route::get('/drs/get-entries', [HubController::class, 'getEntriesData'])->name('drs.get-entries');
+
+                Route::get('/drs/estimate', [HubController::class, 'drs_estimate'])->name('drs.estimate');
+                Route::get('/drs/drs-search', [HubController::class, 'estimate_data'])->name('drs.search');
+                Route::get('/drs/{id}', [HubController::class, 'drs_view'])->name('drs.show');
+                Route::get('/drs/{id}/edit', [HubController::class, 'drs_edit'])->name('drs.edit');
+                Route::put('/drs/{id}', [HubController::class, 'drs_update'])->name('drs.update');
+                Route::delete('/drs/{id}', [HubController::class, 'drs_remove'])->name('drs.destroy');
+                Route::get('/fastbooking/branch', [HubController::class, 'fastbooking_index'])->name('fast_bookings.index');
+                Route::get('/fastbooking/create', [HubController::class, 'fastbooking_create'])->name('fast_bookings.create');
+                Route::post('/fastbooking/store', [HubController::class, 'fastbooking_store'])->name('fast_bookings.store');
+                Route::get('/fastbooking/{id}/edit', [HubController::class, 'fastbooking_edit'])->name('fast_bookings.edit');
+                Route::get('/fastbooking/update', [HubController::class, 'fastbooking_update'])->name('fast_bookings.update');
+                Route::get('/fastbooking/{id}/view', [HubController::class, 'fastbooking_view'])->name('fast_bookings.show');
+                Route::get('/fastbooking/{id}/delete', [HubController::class, 'fastbooking_delete'])->name('fast_bookings.destroy');
+                Route::get('fast_bookings/print_shipper', [HubController::class, 'printShipper'])->name('fast_bookings.print_shipper');
+                Route::get('fast_bookings/print_sticker', [HubController::class, 'printSticker'])->name('fast_bookings.print_sticker');
+
                 Route::get('hubs/export', [HubController::class, 'exportHubs'])->name('hubs.export')->middleware('hasPermission:hub_read');
                 Route::get('branch/filter', [HubController::class, 'branchfilter'])->name('branch.filter')->middleware('hasPermission:hub_read');
                 Route::get('branch/export', [HubController::class, 'exportBranchPayments'])->name('branch.export')->middleware('hasPermission:hub_read');
@@ -221,7 +242,8 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
                 Route::get('/branch/estimate/Estimate-transaction-perday', [HubController::class, 'parcelMultiplePrintLabelEstimateTransactionPerday'])->name('branch.print-label-estimate-transaction-perday');
                 Route::get('/branch/estimate/print-label-estimate-branch-perday', [HubController::class, 'printLabelEstimateBranchPerDay'])->name('branch.print-label-estimate-branch-perday');
                 Route::get('/branch/estimate/print-label-estimate-branch', [HubController::class, 'printLabelEstimateBranch'])->name('branch.branches-estimate');
-
+                Route::get('/hub/out-manifest', [HubController::class, 'outManifest'])->name('hub.out-manifest');
+                Route::get('/hub/in-manifest',  [HubController::class, 'inManifest'])->name('hub.in-manifest');
 
                 // Route::get('hubs/create',                                       [HubController::class, 'create'])->name('hubs.create')->middleware('hasPermission:hub_create');
 
@@ -246,7 +268,9 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
                 Route::get('/payment-requests/{id}/edit', [PaymentRequestController::class, 'edit'])->name('payment-request.edit');
                 // Route::put('/payment-requests/{id}', [PaymentRequestController::class, 'update'])->name('payment-request.update');
 
-                Route::put('hubs/update', [HubController::class, 'update'])->name('hubs.update')->middleware('hasPermission:hub_update');
+                Route::put('hubs/{id}', [HubController::class, 'update'])
+                    ->name('hubs.update')
+                    ->middleware('hasPermission:hub_update');
                 Route::delete('hub/delete/{id}', [HubController::class, 'destroy'])->name('hub.delete')->middleware('hasPermission:hub_delete');
                 Route::get('hub/view/{id}', [HubController::class, 'view'])->name('hub.view')->middleware('hasPermission:hub_view');
                 //hub payment
@@ -283,6 +307,9 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
                 Route::get('/get-all-branches', [HubPaymentRequestController::class, 'getAllBranches'])
                     ->name('get.all.branches');
 
+                Route::get('/get-state-by-city', [HubPaymentRequestController::class, 'getStateByCity'])->name('get.state.by.city');
+                // routes/web.php या api.php में
+                Route::get('/get-cities-suggestions', [HubPaymentRequestController::class, 'getCitiesSuggestions'])->name('get.cities.suggestions');
 
                 Route::post('hub-panelv/payment-request/store-branch', [HubPaymentRequestController::class, 'store_branch'])->name('hub-panel.payment-request.store_branch');
 
@@ -297,12 +324,7 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
 
                 Route::delete('hub-branch-payments/{id}', [HubPaymentRequestController::class, 'destroy'])->name('hub-branch-payments.destroy');
                 Route::delete('hub/payment-request/delete/{id}', [HubPaymentRequestController::class, 'branch_delete'])->name('hub-branch-payments.destroy')->middleware('hasPermission:hub_payment_request_delete');
-		// Hub in charges
-		
-
-		Route::get('/get-state-by-city', [HubPaymentRequestController::class, 'getStateByCity'])->name('get.state.by.city');
-                // routes/web.php या api.php 
-                Route::get('/get-cities-suggestions', [HubPaymentRequestController::class, 'getCitiesSuggestions'])->name('get.cities.suggestions');
+                // Hub in charges
 
 
 

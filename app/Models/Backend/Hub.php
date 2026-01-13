@@ -2,6 +2,8 @@
 
 namespace App\Models\Backend;
 
+use App\Models\Backend\HubRateSlab;
+use App\Models\Backend\HubServiceArea;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -13,23 +15,26 @@ class Hub extends Model
     protected $fillable = [
         'name',
         'phone',
-        'address',
-        'city',
         'state',
+        'city',
+        'address',
         'contact_person',
         'pincode',
         'hub_lat',
         'hub_long',
-        'status',
         'item_type',
         'transport_type',
-        'unit',
-        'description',
+        'weight_unit',
+        'rate_type',
+        'gst_withdrawn',
         'cgst',
         'sgst',
-        'rate',
-        'quantity'
+        'igst',
+        'status',
+        'opening_balance',
+        'current_balance'
     ];
+
 
     // Get all row. Descending order using scope.'
     public function scopeOrderByDesc($query, $data)
@@ -61,5 +66,15 @@ class Hub extends Model
     public function parcels()
     {
         return $this->hasMany(Parcel::class, 'hub_id', 'id');
+    }
+
+    public function serviceAreas()
+    {
+        return $this->hasMany(HubServiceArea::class, 'hub_id');
+    }
+
+    public function rateSlabs()
+    {
+        return $this->hasMany(HubRateSlab::class, 'hub_id');
     }
 }

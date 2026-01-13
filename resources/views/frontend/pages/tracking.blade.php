@@ -26,7 +26,7 @@
                     @foreach ($parcelevents as $key=>$log)
                         @php
                             if(!empty($log->cancel_parcel_id)): 
-                                $cancel   = ' cancel';
+                                $cancel   = 'cancel';
                                 $danger   = 'danger'; 
                             else:
                                 $cancel   = null;

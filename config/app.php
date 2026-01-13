@@ -162,7 +162,7 @@ return [
 
          Maatwebsite\Excel\ExcelServiceProvider::class,
          RealRashid\SweetAlert\SweetAlertServiceProvider::class,
-         // Barryvdh\Debugbar\ServiceProvider::class,
+         Barryvdh\Debugbar\ServiceProvider::class,
          Milon\Barcode\BarcodeServiceProvider::class, 
          Brian2694\Toastr\ToastrServiceProvider::class,
          Cartalyst\Stripe\Laravel\StripeServiceProvider::class ,
@@ -197,7 +197,7 @@ return [
         // 'Example' => App\Facades\Example::class,
 
         'Alert' => RealRashid\SweetAlert\Facades\Alert::class,
-        //'Debugbar' => Barryvdh\Debugbar\Facades\Debugbar::class,
+        'Debugbar' => Barryvdh\Debugbar\Facades\Debugbar::class,
         'DNS1D' => Milon\Barcode\Facades\DNS1DFacade::class,
         'DNS2D' => Milon\Barcode\Facades\DNS2DFacade::class,
         'Toastr'  => Brian2694\Toastr\Facades\Toastr::class,

@@ -31,7 +31,9 @@ class BranchPaymentRequest extends Model
         'sgst',
         'igst',
         'total_with_gst',
-        'include_gst', 
+        'include_gst',
+        'manifest_no'
+
     ];
 
     public function fromBranch()

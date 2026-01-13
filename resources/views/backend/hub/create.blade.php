@@ -1,10 +1,13 @@
+<!-- resources/views/backend/hubs/create.blade.php -->
 @extends('backend.partials.master')
+
 @section('title')
     {{ __('hub.title') }} {{ __('levels.add') }}
 @endsection
+
 @section('maincontent')
     <div class="container-fluid dashboard-content">
-        <!-- pageheader -->
+        <!-- Page Header -->
         <div class="row">
             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                 <div class="page-header">
@@ -15,18 +18,16 @@
                                         class="breadcrumb-link">{{ __('levels.dashboard') }}</a></li>
                                 <li class="breadcrumb-item"><a href="{{ route('hubs.index') }}"
                                         class="breadcrumb-link">{{ __('hub.title') }}</a></li>
-                                <li class="breadcrumb-item"><a href=""
-                                        class="breadcrumb-link active">{{ __('levels.create') }}</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">{{ __('levels.create') }}</li>
                             </ol>
                         </nav>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- end pageheader -->
 
         <div class="row">
-            <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12">
+            <div class="col-xl-10 col-lg-10 col-md-12 col-sm-12 col-12">
                 <div class="card">
                     <div class="card-body">
                         <h2 class="pageheader-title">{{ __('hub.create_hub') }}</h2>
@@ -35,64 +36,148 @@
                             id="basicform">
                             @csrf
 
+                            <!-- Name -->
                             <div class="form-group">
-                                <label for="name">{{ __('levels.name') }}</label> <span class="text-danger">*</span>
+                                <label for="name">{{ __('levels.name') }} <span class="text-danger">*</span></label>
                                 <input id="name" type="text" name="name"
-                                    placeholder="{{ __('placeholder.Enter_name') }}" autocomplete="off"
+                                    placeholder="{{ __('placeholder.Enter_name') }}"
                                     class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
                                     required>
                                 @error('name')
-                                    <small class="text-danger mt-2">{{ $message }}</small>
+                                    <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
 
+                            <!-- Phone -->
                             <div class="form-group">
-                                <label for="phone">{{ __('levels.phone') }}</label> <span class="text-danger">*</span>
-                                <input id="phone" type="number" name="phone"
-                                    placeholder="{{ __('placeholder.Enter_phone') }}" autocomplete="off"
+                                <label for="phone">{{ __('levels.phone') }} <span class="text-danger">*</span></label>
+                                <input id="phone" type="text" name="phone"
+                                    placeholder="{{ __('placeholder.Enter_phone') }}"
                                     class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone') }}"
                                     required>
                                 @error('phone')
-                                    <small class="text-danger mt-2">{{ $message }}</small>
+                                    <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
 
+                            <!-- Hub Location - State & City -->
                             <div class="form-group">
                                 <label for="state">State <span class="text-danger">*</span></label>
                                 <select id="state" name="state" class="form-control" required>
                                     <option value="">Select State</option>
                                 </select>
+                                @error('state')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
 
-
-                            <div class="form-group" id="city-container" style="display:none;">
+                            <div class="form-group">
                                 <label for="city">City <span class="text-danger">*</span></label>
                                 <select id="city" name="city" class="form-control" required>
                                     <option value="">Select City</option>
                                 </select>
+                                @error('city')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
 
-
+                            <!-- Contact Person -->
                             <div class="form-group">
-                                <label for="contact_person">{{ __('levels.contact_person_name') }}</label> <span
-                                    class="text-danger">*</span>
-                                <input type="text" name="contact_person" id="contact_person" class="form-control"
-                                    placeholder="{{ __('placeholder.Enter_contact_persion') }}"
-                                    value="{{ old('contact_person') }}" required>
+                                <label for="contact_person">{{ __('levels.contact_person_name') }} <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" name="contact_person" id="contact_person"
+                                    class="form-control @error('contact_person') is-invalid @enderror"
+                                    placeholder="Enter contact person name" value="{{ old('contact_person') }}" required>
+                                @error('contact_person')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
 
+                            <!-- Pincode -->
                             <div class="form-group">
-                                <label for="pincode">{{ __('levels.pincode') }}</label> <span class="text-danger">*</span>
+                                <label for="pincode">{{ __('levels.pincode') }} <span class="text-danger">*</span></label>
                                 <input type="text" name="pincode" id="pincode" class="form-control"
                                     placeholder="{{ __('placeholder.Enter_pincode') }}" value="{{ old('pincode') }}"
                                     maxlength="6" pattern="[0-9]{6}" required>
+                                @error('pincode')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                            </div>
+
+                            <!-- GST & Tax Fields -->
+                            <div class="card mt-4">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">GST & Tax Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="gst_withdrawn"
+                                                        value="1" id="gst_withdrawn"
+                                                        {{ old('gst_withdrawn') ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="gst_withdrawn">GST
+                                                        Withdrawn</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>CGST (%)</label>
+                                                <input type="number" name="cgst" class="form-control" step="0.01"
+                                                    min="0" value="{{ old('cgst') }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>SGST (%)</label>
+                                                <input type="number" name="sgst" class="form-control" step="0.01"
+                                                    min="0" value="{{ old('sgst') }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>IGST (%) (Other State)</label>
+                                                <input type="number" name="igst" class="form-control" step="0.01"
+                                                    min="0" value="{{ old('igst') }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Rate Type -->
+                            <div class="form-group mt-4">
+                                <label>Rate Type <span class="text-danger">*</span></label>
+                                <div class="d-flex flex-wrap gap-4">
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" id="rate_in" name="rate_type" value="in"
+                                            class="custom-control-input"
+                                            {{ old('rate_type', 'in') == 'in' ? 'checked' : '' }} required>
+                                        <label class="custom-control-label" for="rate_in">IN</label>
+                                    </div>
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" id="rate_out" name="rate_type" value="out"
+                                            class="custom-control-input" {{ old('rate_type') == 'out' ? 'checked' : '' }}>
+                                        <label class="custom-control-label" for="rate_out">OUT</label>
+                                    </div>
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" id="rate_local" name="rate_type" value="local"
+                                            class="custom-control-input"
+                                            {{ old('rate_type') == 'local' ? 'checked' : '' }}>
+                                        <label class="custom-control-label" for="rate_local">Local</label>
+                                    </div>
+                                </div>
+                                @error('rate_type')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
 
                             <!-- Item Type -->
                             <div class="form-group">
-                                <label for="item_type">{{ __('Item Type') }}</label> <span class="text-danger">*</span>
-                                <select name="item_type" id="item_type"
-                                    class="form-control @error('item_type') is-invalid @enderror" required>
+                                <label for="item_type">Item Type <span class="text-danger">*</span></label>
+                                <select name="item_type" id="item_type" class="form-control" required>
                                     <option value="">Select Item Type</option>
                                     <option value="document" {{ old('item_type') == 'document' ? 'selected' : '' }}>
                                         Document</option>
@@ -102,179 +187,188 @@
                                     </option>
                                 </select>
                                 @error('item_type')
-                                    <small class="text-danger mt-2">{{ $message }}</small>
+                                    <small class="text-danger">{{ $message }}</small>
                                 @enderror
-                            </div>
-
-                            <!-- Document Info Alert -->
-                            <div id="document-alert" class="alert alert-info mt-3" style="display: none;">
-                                <i class="fa fa-info-circle"></i>
-                                <strong>Note:</strong> For Document, default quantity is <strong>100 grams</strong> and you
-                                can set a base rate below.
-                                During booking, if weight > 100g, it will be charged as Parcel.
                             </div>
 
                             <!-- Transport Type -->
                             <div class="form-group">
-                                <label for="transport_type">{{ __('Transport Type') }}</label> <span
-                                    class="text-danger">*</span>
-                                <select name="transport_type" id="transport_type"
-                                    class="form-control @error('transport_type') is-invalid @enderror" required>
-                                    <option value="">Select Transport Type</option>
-                                    <option value="by_road" {{ old('transport_type') == 'by_road' ? 'selected' : '' }}>By
-                                        Road</option>
-                                    <option value="by_air" {{ old('transport_type') == 'by_air' ? 'selected' : '' }}>By
-                                        Air</option>
-                                </select>
+                                <label>Transport Type <span class="text-danger">*</span></label>
+                                <div class="d-flex flex-wrap gap-4">
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" id="by_road" name="transport_type" value="by_road"
+                                            class="custom-control-input"
+                                            {{ old('transport_type', 'by_road') == 'by_road' ? 'checked' : '' }} required>
+                                        <label class="custom-control-label" for="by_road">By Road</label>
+                                    </div>
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" id="by_air" name="transport_type" value="by_air"
+                                            class="custom-control-input"
+                                            {{ old('transport_type') == 'by_air' ? 'checked' : '' }}>
+                                        <label class="custom-control-label" for="by_air">By Air</label>
+                                    </div>
+                                </div>
                                 @error('transport_type')
-                                    <small class="text-danger mt-2">{{ $message }}</small>
+                                    <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
 
                             <!-- Weight Unit -->
                             <div class="form-group">
-                                <label for="unit">{{ __('Weight Unit') }}</label> <span class="text-danger">*</span>
-                                <select id="unit" name="unit"
-                                    class="form-control @error('unit') is-invalid @enderror" required>
+                                <label for="weight_unit">Weight Unit <span class="text-danger">*</span></label>
+                                <select name="weight_unit" id="weight_unit" class="form-control" required>
                                     <option value="">Select Unit</option>
-                                    <option value="kg">Kilogram (kg)</option>
-                                    <option value="gram">Gram (g)</option>
-                                    <option value="liter">Liter (L)</option>
-                                    <option value="ml">Milliliter (ml)</option>
+                                    <option value="gram" {{ old('weight_unit') == 'gram' ? 'selected' : '' }}>Gram
+                                    </option>
+                                    <option value="kg" {{ old('weight_unit') == 'kg' ? 'selected' : '' }}>Kilogram
+                                        (kg)</option>
+                                    <option value="liter" {{ old('weight_unit') == 'liter' ? 'selected' : '' }}>Liter
+                                    </option>
+                                    <option value="ml" {{ old('weight_unit') == 'ml' ? 'selected' : '' }}>Milliliter
+                                        (ml)</option>
                                 </select>
-                                @error('unit')
-                                    <small class="text-danger mt-2">{{ $message }}</small>
+                                @error('weight_unit')
+                                    <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
 
-                            <!-- Default Quantity -->
-                            <div class="form-group">
-                                <label for="quantity">{{ __('Default Quantity') }}</label> <span
-                                    class="text-danger">*</span>
-                                <input type="number" step="0.01" id="quantity" name="quantity"
-                                    class="form-control @error('quantity') is-invalid @enderror"
-                                    placeholder="e.g. 100 for document" value="{{ old('quantity') }}" required>
-                                <small class="text-muted">Default assumed weight/quantity (in selected unit)</small>
-                                @error('quantity')
-                                    <small class="text-danger mt-2">{{ $message }}</small>
-                                @enderror
+                            <!-- Document Alert -->
+                            <div id="document-alert" class="alert alert-info mt-3" style="display: none;">
+                                <i class="fa fa-info-circle"></i>
+                                <strong>Note:</strong> For Document, default weight is <strong>100 grams</strong>.
                             </div>
 
-                            <!-- Default Rate -->
-                            <div class="form-group">
-                                <label for="rate">{{ __('Rate (₹)') }}</label> <span class="text-danger">*</span>
-                                <input type="number" step="0.01" id="rate" name="rate"
-                                    class="form-control @error('rate') is-invalid @enderror" placeholder="Enter Rate"
-                                    value="{{ old('rate') }}" required>
-                                <small class="text-muted">Base shipping rate for this hub (per default quantity)</small>
-                                @error('rate')
-                                    <small class="text-danger mt-2">{{ $message }}</small>
-                                @enderror
-                            </div>
+                            <!-- SERVICE AREA & RATES -->
+                            <div class="card mt-4 mb-4" id="service-area-section" style="display: none;">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="fa fa-map-marker"></i> Service Area & Custom Rates</h5>
+                                </div>
+                                <div class="card-body">
+                                    <small class="form-text text-muted d-block mb-4">
+                                        Select states and cities where this hub provides service. Enter your custom rates
+                                        below.
+                                    </small>
 
-                            <!-- GST Configuration -->
-                            <div class="form-group">
-                                <label>{{ __('GST Configuration') }}</label>
-                                <div class="custom-control custom-checkbox mb-2">
-                                    <input type="checkbox" class="custom-control-input" id="include_gst"
-                                        name="include_gst" {{ old('include_gst') ? 'checked' : '' }}>
-                                    <label class="custom-control-label" for="include_gst">
-                                        Include GST (CGST & SGST & IGST)
-                                    </label>
+                                    <!-- Dynamic Weight Slabs -->
+                                    <div class="mb-5 p-4 border rounded" style="background:#f8f9fa;">
+                                        <div class="d-flex justify-content-between align-items-center mb-4">
+                                            <h6 class="mb-0">
+                                                <strong>Weight Slabs & Rates <small class="text-muted">(in <span
+                                                            id="unit-display">grams</span>)</small></strong>
+                                            </h6>
+                                            <button type="button" class="btn btn-primary btn-sm" id="add-slab">
+                                                <i class="fa fa-plus"></i> Add Slab
+                                            </button>
+                                        </div>
+
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-sm">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th width="25%">Min Weight</th>
+                                                        <th width="25%">Max Weight</th>
+                                                        <th width="35%">Rate (₹)</th>
+                                                        <th width="15%">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="slabs-container">
+                                                    <!-- First slab by default -->
+                                                    <tr class="slab-row" data-slab-index="0">
+                                                        <td>
+                                                            <input type="number" name="slabs[0][min]"
+                                                                class="form-control" placeholder="0" step="0.01"
+                                                                min="0" value="{{ old('slabs.0.min', 0) }}"
+                                                                required>
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" name="slabs[0][max]"
+                                                                class="form-control" placeholder="100" step="0.01"
+                                                                min="0" value="{{ old('slabs.0.max', 100) }}"
+                                                                required>
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" name="slabs[0][rate]"
+                                                                class="form-control" placeholder="₹ 0.00" step="0.01"
+                                                                min="0" value="{{ old('slabs.0.rate') }}"
+                                                                required>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <button type="button"
+                                                                class="btn btn-danger btn-sm remove-slab"
+                                                                style="display: none;">
+                                                                <i class="fa fa-trash"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <small class="form-text text-muted d-block mt-3">
+                                            Define weight ranges and their corresponding rates. Click "Add Slab" to add more
+                                            ranges.
+                                        </small>
+                                    </div>
+
+                                    <!-- Service Area Selection -->
+                                    <div class="form-group">
+                                        <label>Select Service States <span class="text-danger">*</span></label>
+                                        <select id="service-state" class="form-control">
+                                            <option value="">Add Service State</option>
+                                        </select>
+                                    </div>
+
+                                    <div id="service-areas-list" class="border rounded p-3"
+                                        style="background: #f8f9fa; min-height: 100px; max-height: 600px; overflow-y: auto;">
+                                        <!-- Dynamic states & cities -->
+                                    </div>
                                 </div>
                             </div>
 
-                            <div id="gst-fields" style="display: {{ old('include_gst') ? 'block' : 'none' }};">
-                                <div class="row">
-                                    <div class="form-group col-md-6">
-                                        <label for="cgst">CGST (%)</label>
-                                        <input type="number" step="0.01" id="cgst" name="cgst"
-                                            class="form-control @error('cgst') is-invalid @enderror"
-                                            placeholder="Enter CGST %" value="{{ old('cgst', '0') }}">
-                                        @error('cgst')
-                                            <small class="text-danger">{{ $message }}</small>
-                                        @enderror
-                                    </div>
-                                    <div class="form-group col-md-6">
-                                        <label for="sgst">SGST (%)</label>
-                                        <input type="number" step="0.01" id="sgst" name="sgst"
-                                            class="form-control @error('sgst') is-invalid @enderror"
-                                            placeholder="Enter SGST %" value="{{ old('sgst', '0') }}">
-                                        @error('sgst')
-                                            <small class="text-danger">{{ $message }}</small>
-                                        @enderror
-                                    </div>
+                            <!-- Address & Map -->
+                            <div class="form-group mt-4">
+                                <label for="address">{{ __('levels.address') }} <span
+                                        class="text-danger">*</span></label>
+                                <input type="hidden" id="hub_lat" name="hub_lat">
+                                <input type="hidden" id="hub_long" name="hub_long">
+                                <input type="hidden" id="address" name="address">
 
-                                    <div class="form-group col-md-4">
-                                        <label for="igst">IGST (%) <span class="text-danger">*</span></label>
-                                        <input type="number" step="0.01" id="igst" name="igst"
-                                            class="form-control @error('igst') is-invalid @enderror"
-                                            placeholder="Enter IGST %" value="{{ old('igst','0') }}">
-                                        @error('igst')
-                                            <small class="text-danger">{{ $message }}</small>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Description -->
-                            <div class="form-group">
-                                <label for="description">{{ __('Description') }}</label>
-                                <textarea name="description" id="description" rows="3"
-                                    class="form-control @error('description') is-invalid @enderror"
-                                    placeholder="Enter description or additional notes">{{ old('description') }}</textarea>
-                                @error('description')
-                                    <small class="text-danger mt-2">{{ $message }}</small>
-                                @enderror
-                            </div>
-
-                            <!-- Address with Map -->
-                            <div class="form-group">
-                                <label for="address">{{ __('levels.address') }}</label> <span
-                                    class="text-danger">*</span>
-                                <input type="hidden" id="lat" name="lat" value="">
-                                <input type="hidden" id="long" name="long" value="">
-                                <div class="main-search-input-item location location-search">
-                                    <div id="autocomplete-container" class="form-group random-search">
-                                        <input id="autocomplete-input" type="text" name="address"
-                                            class="recipe-search2 form-control" placeholder="Location Here!" required>
-                                        <a href="javascript:void(0)" class="submit-btn btn current-location"
-                                            id="locationIcon" onclick="getLocation()">
+                                <div class="input-group mb-3">
+                                    <input id="autocomplete-input" type="text" class="form-control"
+                                        placeholder="Search address...">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-secondary" id="locationIcon">
                                             <i class="fa fa-crosshairs"></i>
-                                        </a>
-                                        @error('address')
-                                            <small class="text-danger mt-2">{{ $message }}</small>
-                                        @enderror
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="">
-                                    <div id="googleMap" class="custom-map"></div>
+
+                                <div class="mt-3">
+                                    <div id="googleMap"
+                                        style="width:100%; height:400px; border-radius:8px; border:1px solid #ddd;"></div>
                                 </div>
+                                @error('address')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
 
                             <!-- Status -->
                             <div class="form-group">
-                                <label for="status">{{ __('levels.status') }}</label> <span
-                                    class="text-danger">*</span>
-                                <select name="status" class="form-control @error('status') is-invalid @enderror">
-                                    @foreach (trans('status') as $key => $status)
+                                <label for="status">{{ __('levels.status') }} <span
+                                        class="text-danger">*</span></label>
+                                <select name="status" class="form-control" required>
+                                    @foreach (trans('status') as $key => $label)
                                         <option value="{{ $key }}"
-                                            {{ old('status', \App\Enums\Status::ACTIVE) == $key ? 'selected' : '' }}>
-                                            {{ $status }}
-                                        </option>
+                                            {{ old('status', 1) == $key ? 'selected' : '' }}>{{ $label }}</option>
                                     @endforeach
                                 </select>
-                                @error('status')
-                                    <small class="text-danger mt-2">{{ $message }}</small>
-                                @enderror
                             </div>
 
-                            <div class="row">
-                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                                    <button type="submit"
-                                        class="btn btn-space btn-primary">{{ __('levels.save') }}</button>
-                                    <a href="{{ route('hubs.index') }}"
-                                        class="btn btn-space btn-secondary">{{ __('levels.cancel') }}</a>
+                            <!-- Buttons -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                    <a href="{{ route('hubs.index') }}" class="btn btn-secondary ml-2">Cancel</a>
                                 </div>
                             </div>
                         </form>
@@ -287,92 +381,237 @@
 
 @push('styles')
     <style>
-        .custom-map {
-            width: 100%;
-            height: 17rem;
+        .custom-control-inline {
+            margin-right: 1.5rem;
+        }
+
+        #service-areas-list .service-area-item {
+            background: white;
+            border-left: 4px solid #007bff;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
         }
     </style>
 @endpush
 
 @push('scripts')
     <script>
-        var mapLat = '';
-        var mapLong = '';
-    </script>
-@endpush
+        const stateCityData = @json(json_decode(file_get_contents(storage_path('app/data/states+cities.json')), true));
+        let serviceAreaIndex = 0;
+        let map, marker, autocomplete;
 
-<script type="text/javascript" src="{{ static_asset('backend/js/map/map-current.js') }}"></script>
-<script async
-    src="https://maps.googleapis.com/maps/api/js?key={{ googleMapSettingKey() }}&libraries=places&callback=initMap">
-</script>
+        function initMap() {
+            const indiaCenter = {
+                lat: 20.5937,
+                lng: 78.9629
+            };
+            map = new google.maps.Map(document.getElementById('googleMap'), {
+                zoom: 5,
+                center: indiaCenter
+            });
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
+            marker = new google.maps.Marker({
+                map: map,
+                draggable: true
+            });
 
-        // Load States
-        $('#state').append('<option value="">Select State</option>');
-        Object.keys(stateCityData).forEach(function(state) {
-            $('#state').append(`<option value="${state}">${state}</option>`);
-        });
+            const input = document.getElementById('autocomplete-input');
+            autocomplete = new google.maps.places.Autocomplete(input, {
+                componentRestrictions: {
+                    country: 'in'
+                }
+            });
+            autocomplete.bindTo('bounds', map);
 
-        // State → City
-        $('#state').on('change', function() {
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                if (!place.geometry) return;
 
-            let state = $(this).val();
-            $('#city').empty().append('<option value="">Select City</option>');
-            $('#city-container').hide();
-            $('#branch-container').hide();
+                const loc = place.geometry.location;
+                updateMapAndFields(loc, place.formatted_address);
+            });
 
-            if (stateCityData[state]) {
-                stateCityData[state].forEach(function(city) {
-                    $('#city').append(`<option value="${city}">${city}</option>`);
+            marker.addListener('dragend', () => updatePosition(marker.getPosition()));
+            document.getElementById('locationIcon').addEventListener('click', getCurrentLocation);
+            getCurrentLocation();
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    const latLng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+                    updateMapAndFields(latLng);
                 });
-                $('#city-container').show();
-            }
-        });
-
-        const itemTypeSelect = document.getElementById('item_type');
-        const unitSelect = document.getElementById('unit');
-        const quantityInput = document.getElementById('quantity');
-        const rateInput = document.getElementById('rate');
-        const documentAlert = document.getElementById('document-alert');
-
-        function updateFormForDocument() {
-            if (itemTypeSelect.value === 'document') {
-                unitSelect.value = 'gram';
-                if (!quantityInput.value) {
-                    quantityInput.value = '100';
-                }
-                if (!rateInput.value) {
-                    rateInput.value = ''; // Optional: default rate for document
-                }
-                documentAlert.style.display = 'block';
-            } else {
-                documentAlert.style.display = 'none';
             }
         }
 
-        // On load
-        updateFormForDocument();
+        function updateMapAndFields(latLng, address = null) {
+            map.setCenter(latLng);
+            map.setZoom(17);
+            marker.setPosition(latLng);
 
-        // On change
-        itemTypeSelect.addEventListener('change', updateFormForDocument);
+            document.getElementById('hub_lat').value = latLng.lat();
+            document.getElementById('hub_long').value = latLng.lng();
 
-        // GST Toggle
-        document.getElementById('include_gst').addEventListener('change', function() {
-            const gstFields = document.getElementById('gst-fields');
-            if (this.checked) {
-                gstFields.style.display = 'block';
-                document.getElementById('cgst').setAttribute('required', 'required');
-                document.getElementById('sgst').setAttribute('required', 'required');
+            if (address) {
+                document.getElementById('autocomplete-input').value = address;
+                document.getElementById('address').value = address;
             } else {
-                gstFields.style.display = 'none';
-                document.getElementById('cgst').removeAttribute('required');
-                document.getElementById('sgst').removeAttribute('required');
+                new google.maps.Geocoder().geocode({
+                    location: latLng
+                }, (results, status) => {
+                    if (status === 'OK' && results[0]) {
+                        const addr = results[0].formatted_address;
+                        document.getElementById('autocomplete-input').value = addr;
+                        document.getElementById('address').value = addr;
+                    }
+                });
             }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Populate states
+            ['#state', '#service-state'].forEach(sel => {
+                $(sel).append('<option value="">Select State</option>');
+                Object.keys(stateCityData).sort().forEach(state => $(sel).append(
+                    `<option value="${state}">${state}</option>`));
+            });
+
+            // Hub state → city
+            $('#state').on('change', function() {
+                const state = $(this).val();
+                $('#city').empty().append('<option value="">Select City</option>');
+                if (state && stateCityData[state]) {
+                    stateCityData[state].sort().forEach(city => $('#city').append(
+                        `<option value="${city}">${city}</option>`));
+                }
+            });
+
+            // Service area addition
+            $('#service-state').on('change', function() {
+                const state = $(this).val();
+                if (!state || $(`[data-service-state="${state}"]`).length) {
+                    $(this).val('');
+                    return;
+                }
+
+                const cities = stateCityData[state] || [];
+                let html = `<div class="service-area-item" data-service-state="${state}">
+                <input type="hidden" name="service_states[${serviceAreaIndex}]" value="${state}">
+                <div class="d-flex justify-content-between mb-3">
+                    <h6><strong>${state}</strong></h6>
+                    <button type="button" class="btn btn-danger btn-sm remove-service-area">Remove</button>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input select-all-cities" type="checkbox" id="all-${serviceAreaIndex}">
+                    <label class="form-check-label font-weight-bold" for="all-${serviceAreaIndex}">Select All Cities</label>
+                </div>
+                <div class="row">`;
+
+                cities.sort().forEach(city => {
+                    const id = `city-${serviceAreaIndex}-${city.replace(/\s+/g, '-')}`;
+                    html += `<div class="col-md-4 mb-2">
+                    <div class="form-check">
+                        <input class="form-check-input city-checkbox" type="checkbox" name="service_cities[${serviceAreaIndex}][]" value="${city}" id="${id}">
+                        <label class="form-check-label" for="${id}">${city}</label>
+                    </div>
+                </div>`;
+                });
+
+                html += `</div></div>`;
+                $('#service-areas-list').append(html);
+                serviceAreaIndex++;
+                $(this).val('');
+                $('#service-area-section').show();
+            });
+
+            // Remove state & select all
+            $(document).on('click', '.remove-service-area', function() {
+                $(this).closest('.service-area-item').remove();
+                if ($('.service-area-item').length === 0) $('#service-area-section').hide();
+            });
+
+            $(document).on('change', '.select-all-cities', function() {
+                $(this).closest('.service-area-item').find('.city-checkbox').prop('checked', this.checked);
+            });
+
+            $(document).on('change', '.city-checkbox', function() {
+                const parent = $(this).closest('.service-area-item');
+                const allChecked = parent.find('.city-checkbox').length === parent.find(
+                    '.city-checkbox:checked').length;
+                parent.find('.select-all-cities').prop('checked', allChecked);
+            });
+
+            // Slab management
+            let slabIndex = 1;
+
+            $('#add-slab').on('click', function() {
+                const newRow = `
+                <tr class="slab-row" data-slab-index="${slabIndex}">
+                    <td>
+                        <input type="number" name="slabs[${slabIndex}][min]" class="form-control" placeholder="Min" step="0.01" min="0" required>
+                    </td>
+                    <td>
+                        <input type="number" name="slabs[${slabIndex}][max]" class="form-control" placeholder="Max" step="0.01" min="0" required>
+                    </td>
+                    <td>
+                        <input type="number" name="slabs[${slabIndex}][rate]" class="form-control" placeholder="₹ 0.00" step="0.01" min="0" required>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger btn-sm remove-slab">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+                $('#slabs-container').append(newRow);
+                slabIndex++;
+                updateRemoveButtons();
+            });
+
+            $(document).on('click', '.remove-slab', function(e) {
+                e.preventDefault();
+                $(this).closest('.slab-row').remove();
+                updateRemoveButtons();
+            });
+
+            function updateRemoveButtons() {
+                const rows = $('#slabs-container .slab-row').length;
+                $('.remove-slab').toggle(rows > 1);
+            }
+
+            // Item type handling
+            function handleItemTypeChange() {
+                const type = $('#item_type').val();
+                if (type === 'document') {
+                    $('#document-alert').show();
+                    $('#weight_unit').val('gram').prop('disabled', true);
+                } else {
+                    $('#document-alert').hide();
+                    $('#weight_unit').prop('disabled', false);
+                }
+                $('#service-area-section').toggle(!!type);
+                updateUnitDisplay();
+            }
+
+            function updateUnitDisplay() {
+                const unit = $('#weight_unit').val() || 'gram';
+                const display = unit === 'kg' ? 'kg' : unit === 'liter' ? 'liter' : unit === 'ml' ? 'ml' : 'grams';
+                $('#unit-display').text(display);
+            }
+
+            $('#item_type').on('change', handleItemTypeChange);
+            $('#weight_unit').on('change', updateUnitDisplay);
+            handleItemTypeChange();
         });
-    });
 
+        $('#basicform').on('submit', function() {
+            $('#weight_unit').prop('disabled', false);
+        });
+    </script>
 
-    const stateCityData = @json(json_decode(file_get_contents(storage_path('app/data/states+cities.json')), true));
-</script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAepBinSy2JxyEvbidFz_AnFYFsFlFqQo4&libraries=places&callback=initMap">
+    </script>
+@endpush

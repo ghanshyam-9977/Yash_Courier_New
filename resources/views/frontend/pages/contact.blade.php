@@ -44,7 +44,7 @@
                                         <p class="text-danger mt-2">{{ $message }}</p>
                                     @enderror
                                 </div>
-                             <div class="mb-3">
+                                <div class="mb-3">
                                     <label for="exampleFormControlTextarea1" class="form-label">{{ __('levels.message') }}
                                         <span class="text-danger">*</span></label>
                                     <textarea class="form-control" id="exampleFormControlTextarea1" name="message" rows="5"

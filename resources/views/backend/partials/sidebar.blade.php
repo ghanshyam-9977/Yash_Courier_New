@@ -32,8 +32,7 @@
                                     href="{{ route('hubs.index') }}">{{ __('menus.hubs') }}</a>
                             </li>
                             <li class="nav-item">
-                                <a 
-                                class="nav-link {{ request()->is('hubs.branch.index*') ? 'active' : '' }}"
+                                <a class="nav-link {{ request()->is('hubs.branch.index*') ? 'active' : '' }}"
                                     href="{{ route('hubs.branch.index') }}">
                                     {{ __('branch to branch') }}
                                 </a>
@@ -45,10 +44,25 @@
                                     href="{{ route('hub.hub-payment.index') }}">{{ __('menus.payments') }}</a>
                             </li>
                         @endif
+                        @if (hasPermission('drs_read') == true)
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('admin/drs*') ? 'active' : '' }}"
+                                    href="{{ route('drs.index') }}">{{ __('Drs') }}</a>
+                            </li>
+                        @endif
+                        @if (hasPermission('fastbooking_read') == true)
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('admin/fastbooking*') ? 'active' : '' }}"
+                                    href="{{ route('fast_bookings.index') }}">{{ __('Fast Booking') }}</a>
+                            </li>
+                        @endif
                     </ul>
                 </div>
             </li>
         @endif
+
+
+
 
         @if (hasPermission('merchant_read') == true || hasPermission('payment_read') == true)
             <li class="nav-item">
@@ -86,9 +100,8 @@
 
         @if (hasPermission('todo_read') == true)
             <li class="nav-item ">
-                <a class="nav-link "
-                    href="{{ route('unit.index') }}" aria-expanded="false" data-target="#hubs" aria-controls="hubs"><i
-                        class="fas fa-tasks"></i>{{ __('Units') }}</a>
+                <a class="nav-link " href="{{ route('unit.index') }}" aria-expanded="false" data-target="#hubs"
+                    aria-controls="hubs"><i class="fas fa-tasks"></i>{{ __('Units') }}</a>
             </li>
         @endif
 
