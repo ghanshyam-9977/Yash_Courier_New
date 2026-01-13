@@ -1,4 +1,6 @@
-name: Deploy Laravel App to Server
+Yash coutier old pipeline
+
+name: Deploy Yash Courier (Laravel)
 
 on:
   push:
@@ -10,32 +12,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Deploy via SSH
+      - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd ${{ secrets.APP_PATH }}
+            set -e
 
-            echo "🔄 Pulling latest code"
+            cd /var/www/yash
+
+            echo "🚀 Pulling latest code"
             git pull origin main
 
             echo "📦 Installing PHP dependencies"
             composer install --no-dev --optimize-autoloader
 
-            echo "🧹 Clearing & caching config"
-            php artisan config:clear
-            php artisan config:cache
-            php artisan route:clear
-            php artisan view:clear
+            echo "🔧 Laravel optimizations"
+            php artisan down || true
+            php artisan optimize:clear
+            php artisan optimize
 
             echo "🔐 Fixing permissions"
-            chown -R www-data:www-data storage bootstrap/cache
-            chmod -R 775 storage bootstrap/cache
+            sudo chown -R www-data:www-data storage bootstrap/cache
+            sudo chmod -R 775 storage bootstrap/cache
 
-            echo "✅ Deployment complete"
+            echo "♻ Reloading PHP-FPM"
+            sudo systemctl reload php8.2-fpm || sudo systemctl reload php-fpm
+
+            php artisan up
+
+            echo "✅ Deployment successful"
+
