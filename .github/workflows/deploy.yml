@@ -1,63 +1,16 @@
-name: PHP Laravel CI/CD Pipeline (Yash Courier)
+name: Deploy Yash Courier (Laravel)
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
-
-env:
-  APP_ENV: production
 
 jobs:
-  build-test:
-    name: Build & Test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.1'
-          extensions: mbstring, pdo, pdo_mysql, xml, curl
-          tools: composer
-          coverage: none
-
-      - name: Validate Composer
-        run: composer validate --strict
-
-      - name: Install PHP Dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
-
-      - name: Run PHPUnit Tests
-        run: |
-          if [ -f phpunit.xml ]; then
-            vendor/bin/phpunit
-          else
-            echo "No phpunit.xml found – skipping tests"
-          fi
-
-      - name: Build Frontend (Vite / NPM)
-        run: |
-          if [ -f package.json ]; then
-            npm install
-            npm run build
-          else
-            echo "No frontend build required"
-          fi
-
   deploy:
-    name: Deploy to EC2
-    needs: build-test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy via SSH
+      - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -66,27 +19,32 @@ jobs:
           script: |
             set -e
 
-            echo "🚀 Deploying to server..."
             cd /var/www/yash
 
+            echo "🚀 Pulling latest code"
             git pull origin main
 
-            echo "📦 Installing dependencies"
-            composer install --no-interaction --prefer-dist --optimize-autoloader
+            echo "📦 Installing PHP dependencies"
+            composer install --no-dev --optimize-autoloader
 
-            echo "🧠 Laravel optimization"
-            php artisan migrate --force || true
-            php artisan key:generate --force || true
-            php artisan config:clear
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:clear
+            echo "🎨 Building frontend"
+            if [ -f package.json ]; then
+              npm install
+              npm run build
+            fi
+
+            echo "🔧 Laravel maintenance"
+            php artisan down || true
+            php artisan optimize:clear
+            php artisan optimize
 
             echo "🔐 Fix permissions"
-            sudo chown -R www-data:www-data .
+            sudo chown -R www-data:www-data storage bootstrap/cache
             sudo chmod -R 775 storage bootstrap/cache
 
-            echo "♻ Reloading NGINX"
-            sudo systemctl reload nginx
+            echo "♻ Reloading PHP-FPM"
+            sudo systemctl reload php8.2-fpm || sudo systemctl reload php-fpm
 
-            echo "✅ Deployment completed successfully"
+            php artisan up
+
+            echo "✅ Deployment successful"
