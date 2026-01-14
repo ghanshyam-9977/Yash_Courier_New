@@ -10,9 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -23,20 +20,20 @@ jobs:
             set -e
 
             echo "🚀 Deploying Laravel App"
+            cd /var/www/yash
 
-            cd ${{ secrets.APP_PATH }}
-
-            echo "🔐 Fix permissions"
-            sudo chown -R www-data:www-data .
-            sudo chmod -R 775 storage bootstrap/cache
-
-            echo "📥 Pull latest code"
+            echo "📥 Pull latest code (as ubuntu)"
             git pull origin main
+
+            echo "🔐 Fix Laravel permissions (runtime only)"
+            sudo chown -R www-data:www-data .
+            sudo chown -R ubuntu:ubuntu .git
+            sudo chmod -R 775 storage bootstrap/cache
 
             echo "📦 Install PHP dependencies"
             sudo -u www-data composer install --no-dev --optimize-autoloader
 
-            echo "🧹 Clear & optimize Laravel"
+            echo "🧹 Optimize Laravel"
             sudo -u www-data php artisan optimize:clear
             sudo -u www-data php artisan config:cache
             sudo -u www-data php artisan route:cache
