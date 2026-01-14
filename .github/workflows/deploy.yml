@@ -1,0 +1,49 @@
+name: Deploy Laravel App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+
+            echo "🚀 Deploying Laravel App"
+
+            cd ${{ secrets.APP_PATH }}
+
+            echo "🔐 Fix permissions"
+            sudo chown -R www-data:www-data .
+            sudo chmod -R 775 storage bootstrap/cache
+
+            echo "📥 Pull latest code"
+            git pull origin main
+
+            echo "📦 Install PHP dependencies"
+            sudo -u www-data composer install --no-dev --optimize-autoloader
+
+            echo "🧹 Clear & optimize Laravel"
+            sudo -u www-data php artisan optimize:clear
+            sudo -u www-data php artisan config:cache
+            sudo -u www-data php artisan route:cache
+            sudo -u www-data php artisan view:cache
+
+            echo "🔁 Restart services"
+            sudo systemctl restart php8.2-fpm
+            sudo systemctl reload nginx
+
+            echo "✅ Deployment complete"
