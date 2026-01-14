@@ -36,7 +36,7 @@ jobs:
             echo "🧹 Optimize Laravel"
             sudo -u www-data php artisan optimize:clear
             sudo -u www-data php artisan config:cache
-            sudo -u www-data php artisan route:cache
+            #sudo -u www-data php artisan route:cache
             sudo -u www-data php artisan view:cache
 
             echo "🔁 Restart services"
