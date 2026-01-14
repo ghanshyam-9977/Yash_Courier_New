@@ -33,7 +33,8 @@
                     </div>
 
                     <div class="card-body">
-                        <form action="{{ route('hub-panel.payment-request.store_branch') }}" method="POST" id="branch-payment-form">
+                        <form action="{{ route('hub-panel.payment-request.store_branch') }}" method="POST"
+                            id="branch-payment-form">
                             @csrf
 
                             <!-- Request Type Selection -->
@@ -42,12 +43,14 @@
                                 <div class="mt-2">
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="type_out" name="request_type" value="out"
-                                            class="custom-control-input" {{ old('request_type') == 'out' ? 'checked' : '' }} required>
+                                            class="custom-control-input" {{ old('request_type') == 'out' ? 'checked' : '' }}
+                                            required>
                                         <label class="custom-control-label" for="type_out">OUT</label>
                                     </div>
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="type_in" name="request_type" value="in"
-                                            class="custom-control-input" {{ old('request_type') == 'in' ? 'checked' : '' }} required>
+                                            class="custom-control-input" {{ old('request_type') == 'in' ? 'checked' : '' }}
+                                            required>
                                         <label class="custom-control-label" for="type_in">IN</label>
                                     </div>
                                 </div>
@@ -143,23 +146,82 @@
                                 <div class="mt-2">
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="item_document" name="item_type" value="document"
-                                            class="custom-control-input" {{ old('item_type') == 'document' ? 'checked' : '' }} required>
+                                            class="custom-control-input"
+                                            {{ old('item_type') == 'document' ? 'checked' : '' }} required>
                                         <label class="custom-control-label" for="item_document">Document</label>
                                     </div>
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="item_parcel" name="item_type" value="parcel"
-                                            class="custom-control-input" {{ old('item_type') == 'parcel' ? 'checked' : '' }} required>
+                                            class="custom-control-input"
+                                            {{ old('item_type') == 'parcel' ? 'checked' : '' }} required>
                                         <label class="custom-control-label" for="item_parcel">Parcel</label>
                                     </div>
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="item_urgent" name="item_type" value="urgent"
-                                            class="custom-control-input" {{ old('item_type') == 'urgent' ? 'checked' : '' }} required>
+                                            class="custom-control-input"
+                                            {{ old('item_type') == 'urgent' ? 'checked' : '' }} required>
                                         <label class="custom-control-label" for="item_urgent">Urgent</label>
                                     </div>
                                 </div>
                                 @error('item_type')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
+                            </div>
+
+
+                            <div class="form-group" id="return-container" style="display:none;">
+                                <div class="custom-control custom-checkbox mb-3">
+                                    <input type="checkbox" class="custom-control-input" id="is_return" name="is_return"
+                                        {{ old('is_return') ? 'checked' : '' }}>
+                                    <label class="custom-control-label" for="is_return">
+                                        return
+                                    </label>
+                                </div>
+
+
+                                <div id="return-fields" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="return_reason">Return Reason <span
+                                                class="text-danger">*</span></label>
+                                        <select id="return_reason" name="return_reason"
+                                            class="form-control @error('return_reason') is-invalid @enderror">
+                                            <option value="">Select Return Reason</option>
+                                            <option value="customer_request"
+                                                {{ old('return_reason') == 'customer_request' ? 'selected' : '' }}>
+                                                Customer Request
+                                            </option>
+                                            <option value="damaged"
+                                                {{ old('return_reason') == 'damaged' ? 'selected' : '' }}>
+                                                Damaged in Transit
+                                            </option>
+                                            <option value="incorrect_item"
+                                                {{ old('return_reason') == 'incorrect_item' ? 'selected' : '' }}>
+                                                Incorrect Item
+                                            </option>
+                                            <option value="refused"
+                                                {{ old('return_reason') == 'refused' ? 'selected' : '' }}>
+                                                Customer Refused
+                                            </option>
+                                            <option value="address_issue"
+                                                {{ old('return_reason') == 'address_issue' ? 'selected' : '' }}>
+                                                Address Issue
+                                            </option>
+                                            <option value="other"
+                                                {{ old('return_reason') == 'other' ? 'selected' : '' }}>
+                                                Other
+                                            </option>
+                                        </select>
+                                        @error('return_reason')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="return_remarks">Return Remarks (Optional)</label>
+                                        <textarea id="return_remarks" name="return_remarks" rows="2" class="form-control"
+                                            placeholder="e.g. Item damaged on left side, customer rejected...">{{ old('return_remarks') }}</textarea>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Transport Type -->
@@ -186,7 +248,8 @@
                                 <label for="tracking_number" id="tracking-label">Tracking / Consignment No <span
                                         class="text-danger">*</span></label>
                                 <input type="text" id="tracking_number" name="tracking_number" class="form-control"
-                                    placeholder="Enter or auto-generated tracking number" value="{{ old('tracking_number') }}" required>
+                                    placeholder="Enter or auto-generated tracking number"
+                                    value="{{ old('tracking_number') }}" required>
                                 <small class="form-text text-muted" id="tracking-hint"></small>
                             </div>
 
@@ -200,8 +263,10 @@
                                             placeholder="Type city name (e.g. Indore, Delhi...)" autocomplete="off"
                                             value="{{ old('city') }}" required>
 
-                                        <input type="hidden" name="city" id="city-hidden" value="{{ old('city') }}">
-                                        <input type="hidden" name="state" id="state-hidden" value="{{ old('state') }}">
+                                        <input type="hidden" name="city" id="city-hidden"
+                                            value="{{ old('city') }}">
+                                        <input type="hidden" name="state" id="state-hidden"
+                                            value="{{ old('state') }}">
 
                                         <small class="form-text text-muted">Start typing to see suggestions...</small>
 
@@ -218,7 +283,8 @@
                                     <div class="form-group">
                                         <label for="state-display">State <span class="text-danger">*</span></label>
                                         <input type="text" id="state-display" class="form-control" readonly>
-                                        <input type="hidden" name="state" id="state-hidden-value" value="{{ old('state') }}">
+                                        <input type="hidden" name="state" id="state-hidden-value"
+                                            value="{{ old('state') }}">
                                     </div>
                                 </div>
                             </div>
@@ -230,13 +296,17 @@
                                         <select id="unit" name="unit"
                                             class="form-control @error('unit') is-invalid @enderror" required>
                                             <option value="">Select Unit</option>
-                                            <option value="kg" {{ old('unit') == 'kg' ? 'selected' : '' }}>Kilogram
+                                            <option value="kg" {{ old('unit') == 'kg' ? 'selected' : '' }}>
+                                                Kilogram
                                                 (kg)</option>
-                                            <option value="gram" {{ old('unit') == 'gram' ? 'selected' : '' }}>Gram (g)
+                                            <option value="gram" {{ old('unit') == 'gram' ? 'selected' : '' }}>Gram
+                                                (g)
                                             </option>
-                                            <option value="liter" {{ old('unit') == 'liter' ? 'selected' : '' }}>Liter
+                                            <option value="liter" {{ old('unit') == 'liter' ? 'selected' : '' }}>
+                                                Liter
                                                 (L)</option>
-                                            <option value="ml" {{ old('unit') == 'ml' ? 'selected' : '' }}>Milliliter
+                                            <option value="ml" {{ old('unit') == 'ml' ? 'selected' : '' }}>
+                                                Milliliter
                                                 (ml)</option>
                                         </select>
                                         @error('unit')
@@ -264,7 +334,7 @@
                                         class="text-danger">*</span></label>
                                 <input type="number" step="0.01" id="amount" name="amount"
                                     class="form-control @error('amount') is-invalid @enderror"
-                                    placeholder="{{ __('Enter Amount') }}" value="{{ old('amount') }}" required>
+                                    placeholder="{{ __('Enter Amount') }}" value="{{ old('amount') }}">
                                 @error('amount')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
@@ -365,7 +435,8 @@
                                                     class="form-control">
                                                     <option value="">Any Mode</option>
                                                     <option value="cash"
-                                                        {{ old('cod_payment_mode') == 'cash' ? 'selected' : '' }}>Cash Only
+                                                        {{ old('cod_payment_mode') == 'cash' ? 'selected' : '' }}>Cash
+                                                        Only
                                                     </option>
                                                     <option value="upi"
                                                         {{ old('cod_payment_mode') == 'upi' ? 'selected' : '' }}>UPI
@@ -374,7 +445,8 @@
                                                         {{ old('cod_payment_mode') == 'card' ? 'selected' : '' }}>Card
                                                     </option>
                                                     <option value="online"
-                                                        {{ old('cod_payment_mode') == 'online' ? 'selected' : '' }}>Online
+                                                        {{ old('cod_payment_mode') == 'online' ? 'selected' : '' }}>
+                                                        Online
                                                         Transfer</option>
                                                 </select>
                                             </div>
@@ -483,6 +555,7 @@
                 $('#transport-type-container').show();
                 $('#tracking-container').show();
                 $('#vehicle-container').show();
+                $('#return-container').show();
                 $('#tracking-label').html('Tracking / Consignment No <span class="text-danger">*</span>');
                 $('#vehicle-label').html('Vehicle No <span class="text-danger">*</span>');
                 $('#tracking-hint').text('Auto-generated tracking number');
@@ -507,6 +580,7 @@
                 $('#transport-type-container').show();
                 $('#tracking-container').show();
                 $('#vehicle-container').show();
+                $('#return-container').show();
                 $('#tracking-label').html('Tracking / Consignment No <span class="text-danger">*</span>');
                 $('#vehicle-label').html('Vehicle No <span class="text-danger">*</span>');
                 $('#tracking_number').prop('', false).val('');
@@ -819,7 +893,7 @@
                             if (response.data.is_cod) {
                                 $('#is_cod').prop('checked', true);
                                 $('#cod-fields').show();
-                                $('#cod_amount').val(response.data.cod_amount || '').attr('required',
+                                $('#cod_amount').val(response.data.cod_amount || '').attr('',
                                     'required');
                                 $('#cod_payment_mode').val(response.data.cod_payment_mode || '');
                                 $('#cod_remarks').val(response.data.cod_remarks || '');
@@ -916,7 +990,8 @@
                     }
                 } else {
                     // Fallback to alert
-                    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+                    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' :
+                        'ℹ️';
                     alert(icon + ' ' + message);
                 }
             }
@@ -948,7 +1023,8 @@
                     contentType: false,
                     success: function(response) {
                         if (response.success) {
-                            showNotification('success', response.message || 'Request submitted successfully!');
+                            showNotification('success', response.message ||
+                                'Request submitted successfully!');
                             // Form data remains filled, no reset
                         } else {
                             showNotification('error', response.message || 'An error occurred.');
@@ -1097,6 +1173,109 @@
                 $('#state-display').val('{{ old('state') }}');
                 $('#city-hidden').val('{{ old('city') }}');
                 $('#state-hidden-value').val('{{ old('state') }}');
+            @endif
+        });
+
+
+        $(document).ready(function() {
+
+            // Return Checkbox Toggle
+            $('#is_return').on('change', function() {
+                if (this.checked) {
+                    $('#return-fields').slideDown();
+                    $('#return_reason').attr('required', 'required');
+
+                    // Amount को 0 करें (या hidden करें)
+                    $('#amount').val('0').prop('readonly', true).css('opacity', '0.6');
+
+                    // COD को disable करें
+                    $('#is_cod').prop('checked', false).prop('disabled', true);
+                    $('#cod-container').slideUp();
+                    $('#cod-fields').hide();
+                    $('#cod_amount').removeAttr('required').val('');
+
+                    // GST को disable करें
+                    $('#include_gst').prop('checked', false).prop('disabled', true);
+                    $('#gst-fields').hide();
+                    $('#gst-checkbox-container').slideUp();
+
+                    updateDescriptionWithReturn();
+                } else {
+                    $('#return-fields').slideUp();
+                    $('#return_reason').removeAttr('required').val('');
+                    $('#return_remarks').val('');
+
+                    // Amount को normal करें
+                    $('#amount').val('').prop('readonly', false).css('opacity', '1');
+
+                    // COD को enable करें
+                    $('#is_cod').prop('disabled', false);
+                    $('#cod-container').slideDown();
+                    $('#gst-checkbox-container').slideDown();
+
+                    let desc = $('#description').val().replace(/\n?Return Reason:.*$/i, '').trim();
+                    $('#description').val(desc);
+                }
+            });
+
+            // Return details को description में add करें
+            $('#return_reason, #return_remarks').on('input change', function() {
+                if ($('#is_return').is(':checked')) {
+                    updateDescriptionWithReturn();
+                }
+            });
+
+            function updateDescriptionWithReturn() {
+                const reason = $('#return_reason').val();
+                if (!reason) return;
+
+                let returnText = `Return Reason: ${getReasonLabel(reason)}`;
+
+                const remarks = $('#return_remarks').val().trim();
+                if (remarks) {
+                    returnText += ` | Remarks: ${remarks}`;
+                }
+
+                let currentDesc = $('#description').val().trim();
+                currentDesc = currentDesc.replace(/\n?Return Reason:.*$/i, '').trim();
+
+                if (currentDesc) {
+                    currentDesc += '\n' + returnText;
+                } else {
+                    currentDesc = returnText;
+                }
+
+                $('#description').val(currentDesc);
+            }
+
+            function getReasonLabel(value) {
+                const reasons = {
+                    'customer_request': 'Customer Request',
+                    'damaged': 'Damaged in Transit',
+                    'incorrect_item': 'Incorrect Item',
+                    'refused': 'Customer Refused',
+                    'address_issue': 'Address Issue',
+                    'other': 'Other'
+                };
+                return reasons[value] || value;
+            }
+
+            // Out और In request handlers में return-container add करें
+            // handleOutRequest function में यह line add करें:
+            // $('#return-container').show();
+
+            // handleInRequest function में यह line add करें:
+            // $('#return-container').show();
+
+            // Page load पर if old value exists
+            @if (old('is_return'))
+                $('#return-container').show();
+                $('#return-fields').show();
+                $('#is_return').prop('checked', true);
+                $('#return_reason').attr('required', 'required');
+                $('#amount').val('0').prop('readonly', true).css('opacity', '0.6');
+                $('#is_cod').prop('disabled', true);
+                $('#include_gst').prop('disabled', true);
             @endif
         });
     </script>

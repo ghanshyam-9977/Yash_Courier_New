@@ -9,6 +9,7 @@ use App\Models\Backend\HubPayment;
 use App\Repositories\HubPaymentRequest\HubPaymentRequestInterface;
 use App\Repositories\HubManage\HubPayment\HubPaymentInterface;
 use App\Enums\ApprovalStatus;
+use App\Models\BranchPaymentGet;
 use Illuminate\Http\Request;
 use App\Models\BranchPaymentRequest;
 use Brian2694\Toastr\Facades\Toastr;
@@ -178,6 +179,98 @@ class HubPaymentRequestController extends Controller
         $branches = Hub::all();
         return view('backend.hub_panel.hub_payment_request.branch_create', compact('branches'));
     }
+    // public function ledger_index()
+    // {
+    //     // Payments
+    //     $payments = BranchPaymentGet::all();
+
+    //     // Saare hubs/branches ka id => name map
+    //     $hubs = Hub::pluck('name', 'id');
+
+    //     return view(
+    //         'backend.hub_panel.ledger.index',
+    //         compact('payments', 'hubs')
+    //     );
+    // }
+
+    public function ledger_index()
+    {
+        // Unique branch routes (from + to combination)
+        $payments = BranchPaymentGet::select('from_branch_id', 'to_branch_id')
+            ->groupBy('from_branch_id', 'to_branch_id')
+            ->get();
+
+        // Branch id => name
+        $hubs = Hub::pluck('name', 'id');
+
+        return view(
+            'backend.hub_panel.ledger.index',
+            compact('payments', 'hubs')
+        );
+    }
+
+
+    public function getByBranch(Request $request)
+    {
+        $fromBranchId = $request->query('from_branch_id');
+        $toBranchId = $request->query('to_branch_id');
+
+        if (!$fromBranchId || !$toBranchId) {
+            return response()->json(['error' => 'Invalid branch IDs'], 400);
+        }
+
+        $ledger = DB::table('branch_payment_requests')
+            ->selectRaw("
+        created_at AS entry_date,
+
+        CASE
+            WHEN request_type = 'in' AND to_branch_id = ?
+                THEN CONCAT(
+                    'REC-',
+                    id,
+                    ' MF.NO.',
+                    manifest_no
+                )
+
+            WHEN request_type = 'out' AND from_branch_id = ?
+                THEN CONCAT(
+                    'PAY-',
+                    id,
+                    ' MF.NO.',
+                    manifest_no
+                )
+
+            ELSE ''
+        END AS particulars,
+
+        CASE
+            WHEN request_type = 'in' AND to_branch_id = ?
+                THEN IFNULL(total_with_gst, amount)
+            ELSE 0
+        END AS debit,
+
+        CASE
+            WHEN request_type = 'out' AND from_branch_id = ?
+                THEN IFNULL(total_with_gst, amount)
+            ELSE 0
+        END AS credit
+    ", [
+                $toBranchId,
+                $fromBranchId,
+                $toBranchId,
+                $fromBranchId
+            ])
+            ->where(function ($query) use ($fromBranchId, $toBranchId) {
+                $query->where('from_branch_id', $fromBranchId)
+                    ->orWhere('to_branch_id', $toBranchId);
+            })
+            ->orderBy('created_at')
+            ->get();
+
+        return response()->json(['ledger' => $ledger]);
+    }
+
+
 
 
 
@@ -233,32 +326,34 @@ class HubPaymentRequestController extends Controller
             $isCod = $request->has('is_cod');
 
             $validated = $request->validate([
-                'request_type' => 'required|in:in,out',
-                'item_type' => 'required|string',
-                'tracking_number' => 'required|string',
-                'manifest_no' => 'required|string',
-                'from_branch_id' => 'required',
-                'to_branch_id' => 'required',
-                'transport_type' => 'required|in:by_road,by_air',
-                'unit' => 'required|string',
-                'quantity' => 'required|numeric|min:0',
-                'amount' => 'required|numeric|min:0',
+                'request_type' => '|in:in,out',
+                'item_type' => '|string',
+                'tracking_number' => '|string',
+                'manifest_no' => '|string',
+                'from_branch_id' => '',
+                'to_branch_id' => '',
+                'transport_type' => '|in:by_road,by_air',
+                'unit' => '|string',
+                'quantity' => '|numeric|min:0',
+                'amount' => '|numeric|min:0',
 
                 'include_gst' => 'nullable',
                 'cgst' => 'nullable|numeric|min:0|max:100',
                 'sgst' => 'nullable|numeric|min:0|max:100',
                 'igst' => 'nullable|numeric|min:0|max:100',
 
-                'description' => 'required|string',
-                'vehicle_no' => 'required|string|max:50',
+                'description' => '|string',
+                'vehicle_no' => '|string|max:50',
 
                 'is_cod' => 'nullable',
-                'cod_amount' => $isCod ? 'required|numeric|min:0.01' : 'nullable',
+                'is_return' => 'nullable',
+
+                'cod_amount' => $isCod ? '|numeric|min:0.01' : 'nullable',
                 'cod_payment_mode' => 'nullable|string|max:50',
                 'cod_remarks' => 'nullable|string',
 
-                'city'  => 'required|string|max:100',
-                'state' => 'required|string|max:100',
+                'city'  => '|string|max:100',
+                'state' => '|string|max:100',
             ]);
 
             $validated['is_cod'] = $isCod ? 1 : 0;
@@ -268,6 +363,19 @@ class HubPaymentRequestController extends Controller
                 $validated['cod_amount'] = null;
                 $validated['cod_payment_mode'] = null;
                 $validated['cod_remarks'] = null;
+            }
+
+            if (!$validated['is_return']) {
+                $validated['return_reason'] = null;
+                $validated['return_remarks'] = null;
+            }
+
+
+            if ($validated['is_return']) {
+                $validated['amount'] = 0;
+                $validated['is_cod'] = 0;
+                $validated['cod_amount'] = null;
+                $validated['include_gst'] = 0;
             }
 
             if ($validated['include_gst']) {
@@ -456,7 +564,7 @@ class HubPaymentRequestController extends Controller
     {
         try {
             $itemType = $request->input('item_type');         // 'document' or 'parcel'
-            $transportType = $request->input('transport_type'); // Ye ab required hai
+            $transportType = $request->input('transport_type'); // Ye ab  hai
 
             if (!$itemType || !$transportType) {
                 return response()->json([

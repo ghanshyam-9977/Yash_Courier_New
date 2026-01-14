@@ -295,6 +295,8 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
 
 
                 Route::get('hub/payment-request/create', [HubPaymentRequestController::class, 'branch_create'])->name('hub-panel.payment-request.create');
+                Route::get('hub/ledger', [HubPaymentRequestController::class, 'ledger_index'])->name('ledger.index');
+                Route::get('/ledger', [HubPaymentRequestController::class, 'getByBranch']);
                 Route::get('/get-states', [HubPaymentRequestController::class, 'getStates'])->name('get.states');
                 Route::get('/get-cities', [HubPaymentRequestController::class, 'getCities'])->name('get.cities');
                 Route::get('/get-branches-by-city/{city}', [HubPaymentRequestController::class, 'getBranchesByCity'])

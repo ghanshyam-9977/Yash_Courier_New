@@ -99,6 +99,10 @@
                                     data-toggle="tooltip" data-placement="top" title="Generate Estimate">
                                     <i class="fa fa-file-text-o"></i> Generate Estimate
                                 </a>
+                                <a href="{{ route('ledger.index') }}" class="btn btn-success btn-sm" data-toggle="tooltip"
+                                    data-placement="top" title="View Ledger">
+                                    <i class="fa fa-book"></i> Ledger
+                                </a>
                                 {{-- <a href="{{ route('branch.estimate-perday', request()->all()) }}"
                                     class="btn btn-dark btn-sm mr-2" data-toggle="tooltip" data-placement="top"
                                     title="Generate Estimate ParDay">
@@ -109,6 +113,8 @@
                                     data-toggle="tooltip" data-placement="top" title="{{ __('levels.add') }}">
                                     <i class="fa fa-plus"></i>
                                 </a>
+
+
                             </div>
                         </div>
                     </div>

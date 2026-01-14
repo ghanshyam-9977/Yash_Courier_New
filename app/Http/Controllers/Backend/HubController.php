@@ -315,15 +315,17 @@ class HubController extends Controller
 
     public function printShipper()
     {
-        // Fetch data, prepare print view for shipper
-        $fastBookings = FastBooking::paginate(20); // ya apne hisaab se
-        return view('fast_bookings.print_shipper', compact('fastBookings'));
+        $bookingsData = FastBooking::with(['items'])->get();
+        logger('latest', ['data'=> $bookingsData]);
+        return view('backend.fastbooking.print_shipper', compact('bookingsData'));
     }
+
 
 
     public function printSticker()
     {
-        $fastBookings = FastBookingItem::all();
+        // ✅ fast booking ke saath parent data load
+        $fastBookings = FastBookingItem::with('fastBooking')->get();
 
         $generator = new BarcodeGeneratorPNG();
 
@@ -341,7 +343,7 @@ class HubController extends Controller
             Storage::disk('public')->put($fileName, $barcodeData);
 
             $booking->barcode_image = $fileName;
-            // $booking->save();
+            // $booking->save(); // agar DB me save karna ho
         }
 
         return view('backend.fastbooking.print_sticker', compact('fastBookings'));
