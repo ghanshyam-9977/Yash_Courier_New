@@ -52,6 +52,20 @@
             margin-bottom: 25px;
         }
 
+        .row-two-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .row-full {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
         .form-group {
             display: flex;
             flex-direction: column;
@@ -66,7 +80,7 @@
             letter-spacing: 0.5px;
         }
 
-        .required::after {
+        label.required::after {
             content: " *";
             color: #ef4444;
         }
@@ -85,6 +99,23 @@
             font-size: 13px;
             font-family: inherit;
             transition: all 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px;
+            padding-right: 36px;
+            cursor: pointer;
+        }
+
+        select option {
+            padding: 8px;
+            line-height: 1.5;
         }
 
         input[type="text"]:focus,
@@ -100,25 +131,16 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        .row-main-content {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .row-bottom {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            margin-bottom: 25px;
+        textarea {
+            resize: vertical;
+            min-height: 100px;
         }
 
         /* Items Table */
         .items-section {
-            margin-top: 40px;
-            padding-top: 30px;
-            border-top: 2px solid #f0f0f0;
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
         }
 
         .items-header {
@@ -208,9 +230,9 @@
             gap: 12px;
             justify-content: flex-start;
             flex-wrap: wrap;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid #f0f0f0;
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
         }
 
         .btn-custom {
@@ -256,6 +278,7 @@
                 transform: translateX(400px);
                 opacity: 0;
             }
+
             to {
                 transform: translateX(0);
                 opacity: 1;
@@ -267,6 +290,7 @@
                 transform: translateX(0);
                 opacity: 1;
             }
+
             to {
                 transform: translateX(400px);
                 opacity: 0;
@@ -305,10 +329,17 @@
             margin-top: 4px;
         }
 
+        @media (max-width: 1024px) {
+            .row-content {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
         @media (max-width: 768px) {
+
             .row-content,
-            .row-main-content,
-            .row-bottom {
+            .row-two-cols,
+            .row-full {
                 grid-template-columns: 1fr;
             }
 
@@ -344,20 +375,21 @@
                 @method('PUT')
             @endif
 
+            <!-- Booking Details Section -->
             <div class="form-card">
-                <!-- Main Booking Fields -->
+                <!-- Row 1: Booking No, From Branch, To Branch -->
                 <div class="row-content">
                     <div class="form-group">
                         <label class="required">Booking No</label>
                         <input type="text" name="booking_no" placeholder="Enter booking number"
-                            value="{{ isset($booking) ? $booking->booking_no : '' }}" required>
+                            value="{{ isset($booking) ? $booking->booking_no : '' }}">
                         @error('booking_no')
                             <span class="validation-error">{{ $message }}</span>
                         @enderror
                     </div>
                     <div class="form-group">
-                        <label class="required">From Branch</label>
-                        <select name="from_branch_id" required>
+                        <label class="">From Branch</label>
+                        <select name="from_branch_id">
                             <option value="">Select Branch</option>
                             @foreach ($branches as $branch)
                                 <option value="{{ $branch->id }}"
@@ -371,8 +403,8 @@
                         @enderror
                     </div>
                     <div class="form-group">
-                        <label class="required">To Branch</label>
-                        <select name="to_branch_id" required>
+                        <label class="">To Branch</label>
+                        <select name="to_branch_id">
                             <option value="">Select Branch</option>
                             @foreach ($branches as $branch)
                                 <option value="{{ $branch->id }}"
@@ -387,11 +419,11 @@
                     </div>
                 </div>
 
-                <!-- Network & Payment -->
-                <div class="row-main-content">
+                <!-- Row 2: Network, Payment Type -->
+                <div class="row-two-cols">
                     <div class="form-group">
-                        <label class="required">Network</label>
-                        <select name="network" required>
+                        <label class="">Network</label>
+                        <select name="network">
                             <option value="">Select Network</option>
                             @foreach ($networks as $network)
                                 <option value="{{ $network }}"
@@ -404,32 +436,57 @@
                             <span class="validation-error">{{ $message }}</span>
                         @enderror
                     </div>
-
                     <div class="form-group">
-                        <label class="required">Payment Type</label>
-                        <select name="payment_type" required>
+                        <label class="">Payment Type</label>
+                        <select name="payment_type">
                             <option value="">Select Type</option>
-                            <option value="CASH" {{ isset($booking) && $booking->payment_type == 'CASH' ? 'selected' : '' }}>Cash</option>
-                            <option value="ONLINE" {{ isset($booking) && $booking->payment_type == 'ONLINE' ? 'selected' : '' }}>Online</option>
-                            <option value="COD" {{ isset($booking) && $booking->payment_type == 'COD' ? 'selected' : '' }}>COD</option>
-                            <option value="SLIP" {{ isset($booking) && $booking->payment_type == 'SLIP' ? 'selected' : '' }}>Slip</option>
+                            <option value="CASH"
+                                {{ isset($booking) && $booking->payment_type == 'CASH' ? 'selected' : '' }}>
+                                Cash</option>
+                            <option value="ONLINE"
+                                {{ isset($booking) && $booking->payment_type == 'ONLINE' ? 'selected' : '' }}>Online
+                            </option>
+                            <option value="COD"
+                                {{ isset($booking) && $booking->payment_type == 'COD' ? 'selected' : '' }}>
+                                COD</option>
+                            <option value="SLIP"
+                                {{ isset($booking) && $booking->payment_type == 'SLIP' ? 'selected' : '' }}>
+                                Slip</option>
                         </select>
                         @error('payment_type')
                             <span class="validation-error">{{ $message }}</span>
                         @enderror
                     </div>
+                </div>
+
+                <!-- Row 3: Forwarding No, E-Way Bill No -->
+                <div class="row-two-cols">
                     <div class="form-group">
-                        <label>Slip No</label>
-                        <input type="text" name="slip_no" placeholder="Enter slip number"
-                            value="{{ isset($booking) ? $booking->slip_no : '' }}">
+                        <label>Forwarding No</label>
+                        <input type="text" name="forwarding_no" placeholder="Auto / Enter at dispatch time"
+                            value="{{ isset($booking) ? $booking->forwarding_no : '' }}">
+                        @error('forwarding_no')
+                            <span class="validation-error">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="form-group">
+                        <label>E-Way Bill No</label>
+                        <input type="text" name="eway_bill_no" placeholder="Enter E-Way Bill Number"
+                            value="{{ isset($booking) ? $booking->eway_bill_no : '' }}">
+                        @error('eway_bill_no')
+                            <span class="validation-error">{{ $message }}</span>
+                        @enderror
                     </div>
                 </div>
 
-                <!-- Remarks -->
-                <div class="row-bottom">
+                <!-- Row 4: Remark (Full Width) -->
+                <div class="row-full">
                     <div class="form-group">
                         <label>Remark</label>
-                        <textarea name="remark" placeholder="Add remarks" style="min-height: 80px;">{{ isset($booking) ? $booking->remark : '' }}</textarea>
+                        <textarea name="remark" placeholder="Add remarks">{{ isset($booking) ? $booking->remark : '' }}</textarea>
+                        @error('remark')
+                            <span class="validation-error">{{ $message }}</span>
+                        @enderror
                     </div>
                 </div>
             </div>
@@ -455,26 +512,30 @@
                     </thead>
                     <tbody id="items-body">
                         @if (isset($booking) && $booking->items->count() > 0)
-                            @foreach($booking->items as $item)
+                            @foreach ($booking->items as $item)
                                 <tr class="item-row" data-item-id="{{ $item->id }}">
                                     <td><input type="text" name="items[tracking_no][]" class="item-input"
-                                        value="{{ $item->tracking_no }}" required></td>
+                                            value="{{ $item->tracking_no }}"></td>
                                     <td><input type="text" name="items[receiver_name][]" class="item-input"
-                                        value="{{ $item->receiver_name }}" required></td>
+                                            value="{{ $item->receiver_name }}"></td>
                                     <td><input type="text" name="items[address][]" class="item-input"
-                                        value="{{ $item->address }}" required></td>
+                                            value="{{ $item->address }}"></td>
                                     <td><input type="number" name="items[pcs][]" class="item-input item-pcs"
-                                        value="{{ $item->pcs }}" min="1" required></td>
-                                    <td><input type="number" step="0.01" name="items[weight][]" class="item-input item-weight"
-                                        value="{{ $item->weight }}" min="0.01" required></td>
-                                    <td><input type="number" step="0.01" name="items[amount][]" class="item-input item-amount"
-                                        value="{{ $item->amount }}" min="0" required></td>
-                                    <td><button type="button" class="btn-remove-item" onclick="removeItem(this)">Remove</button></td>
+                                            value="{{ $item->pcs }}" min="1"></td>
+                                    <td><input type="number" step="0.01" name="items[weight][]"
+                                            class="item-input item-weight" value="{{ $item->weight }}" min="0.01">
+                                    </td>
+                                    <td><input type="number" step="0.01" name="items[amount][]"
+                                            class="item-input item-amount" value="{{ $item->amount }}" min="0">
+                                    </td>
+                                    <td><button type="button" class="btn-remove-item"
+                                            onclick="removeItem(this)">Remove</button></td>
                                 </tr>
                             @endforeach
                         @else
                             <tr id="empty-row">
-                                <td colspan="7" style="text-align: center; color: #999; padding: 40px;">No items added yet</td>
+                                <td colspan="7" style="text-align: center; color: #999; padding: 40px;">No items added
+                                    yet</td>
                             </tr>
                         @endif
                     </tbody>
@@ -534,7 +595,9 @@
             const weightInputs = document.querySelectorAll('.item-weight');
             const amountInputs = document.querySelectorAll('.item-amount');
 
-            let totalPcs = 0, totalWeight = 0, totalAmount = 0;
+            let totalPcs = 0,
+                totalWeight = 0,
+                totalAmount = 0;
 
             pcsInputs.forEach((input, idx) => {
                 totalPcs += parseInt(input.value) || 0;
@@ -553,7 +616,8 @@
 
             const body = document.getElementById('items-body');
             if (body.children.length === 0) {
-                body.innerHTML = '<tr id="empty-row"><td colspan="7" style="text-align: center; color: #999; padding: 40px;">No items added yet</td></tr>';
+                body.innerHTML =
+                    '<tr id="empty-row"><td colspan="7" style="text-align: center; color: #999; padding: 40px;">No items added yet</td></tr>';
             }
             calculateTotals();
         }
@@ -566,12 +630,12 @@
             const row = document.createElement('tr');
             row.className = 'item-row';
             row.innerHTML = `
-                <td><input type="text" name="items[tracking_no][]" class="item-input" placeholder="Tracking No" required></td>
-                <td><input type="text" name="items[receiver_name][]" class="item-input" placeholder="Receiver Name" required></td>
-                <td><input type="text" name="items[address][]" class="item-input" placeholder="Address" required></td>
-                <td><input type="number" name="items[pcs][]" class="item-input item-pcs" placeholder="0" min="1" required></td>
-                <td><input type="number" step="0.01" name="items[weight][]" class="item-input item-weight" placeholder="0.00" min="0.01" required></td>
-                <td><input type="number" step="0.01" name="items[amount][]" class="item-input item-amount" placeholder="0.00" min="0" required></td>
+                <td><input type="text" name="items[tracking_no][]" class="item-input" placeholder="Tracking No" ></td>
+                <td><input type="text" name="items[receiver_name][]" class="item-input" placeholder="Receiver Name" ></td>
+                <td><input type="text" name="items[address][]" class="item-input" placeholder="Address" ></td>
+                <td><input type="number" name="items[pcs][]" class="item-input item-pcs" placeholder="0" min="1" ></td>
+                <td><input type="number" step="0.01" name="items[weight][]" class="item-input item-weight" placeholder="0.00" min="0.01" ></td>
+                <td><input type="number" step="0.01" name="items[amount][]" class="item-input item-amount" placeholder="0.00" min="0" ></td>
                 <td><button type="button" class="btn-remove-item" onclick="removeItem(this)">Remove</button></td>
             `;
 
@@ -607,29 +671,30 @@
             const formData = new FormData(form);
 
             fetch(form.action, {
-                method: isEditMode ? 'POST' : 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const msg = isEditMode ? 'Booking updated successfully!' : 'Booking created successfully!';
-                    showToast(data.message || msg, 'success');
-                    setTimeout(() => {
-                        window.location.href = data.redirect;
-                    }, 1500);
-                } else {
-                    showToast(data.message, 'error');
-                }
-            })
-            .catch(error => {
-                showToast('Error: ' + error.message, 'error');
-                console.error('Error:', error);
-            });
+                    method: isEditMode ? 'POST' : 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const msg = isEditMode ? 'Booking updated successfully!' :
+                            'Booking created successfully!';
+                        showToast(data.message || msg, 'success');
+                        setTimeout(() => {
+                            window.location.href = data.redirect;
+                        }, 1500);
+                    } else {
+                        showToast(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    showToast('Error: ' + error.message, 'error');
+                    console.error('Error:', error);
+                });
         });
 
         // Attach change listeners to existing items

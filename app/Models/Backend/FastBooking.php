@@ -23,6 +23,8 @@ class FastBooking extends Model
         'total_amount',
         'cod_amount',
         'remark',
+        'forwarding_no',
+        'eway_bill_no',
     ];
 
     // Relation: ek booking ke multiple items ho sakte hain

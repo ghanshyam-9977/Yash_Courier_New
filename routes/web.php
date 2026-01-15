@@ -227,7 +227,7 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
                 Route::get('/fastbooking/create', [HubController::class, 'fastbooking_create'])->name('fast_bookings.create');
                 Route::post('/fastbooking/store', [HubController::class, 'fastbooking_store'])->name('fast_bookings.store');
                 Route::get('/fastbooking/{id}/edit', [HubController::class, 'fastbooking_edit'])->name('fast_bookings.edit');
-                Route::get('/fastbooking/update', [HubController::class, 'fastbooking_update'])->name('fast_bookings.update');
+                Route::put('/fastbooking/update/{id}', [HubController::class, 'fastbooking_update'])->name('fast_bookings.update');
                 Route::get('/fastbooking/{id}/view', [HubController::class, 'fastbooking_view'])->name('fast_bookings.show');
                 Route::get('/fastbooking/{id}/delete', [HubController::class, 'fastbooking_delete'])->name('fast_bookings.destroy');
                 Route::get('fast_bookings/print_shipper', [HubController::class, 'printShipper'])->name('fast_bookings.print_shipper');

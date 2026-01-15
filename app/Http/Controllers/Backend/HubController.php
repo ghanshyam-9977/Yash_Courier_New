@@ -142,18 +142,20 @@ class HubController extends Controller
     public function fastbooking_store(Request $request)
     {
         $request->validate([
-            'booking_no'                 => 'required',
-            'from_branch_id'             => 'required',
-            'to_branch_id'               => 'required',
-            'network'                    => 'required',
-            'payment_type'               => 'required',
+            'booking_no'                 => 'nullable|string|max:50',
+            'from_branch_id'             => 'nullable|exists:hubs,id',
+            'to_branch_id'               => 'nullable|exists:hubs,id',
+            'network'                    => 'nullable|string|max:50',
+            'payment_type'               => 'nullable|string|max:50',
+            'forwarding_no'  => 'nullable|string|max:50',
+            'eway_bill_no'   => 'nullable|string|max:20',
 
-            'items.tracking_no.*'        => 'required|distinct|unique:fast_booking_items,tracking_no',
-            'items.receiver_name.*'      => 'required',
-            'items.address.*'            => 'required',
-            'items.pcs.*'                => 'required|integer|min:1',
-            'items.weight.*'             => 'required|numeric|min:0.01',
-            'items.amount.*'             => 'required|numeric|min:0',
+            'items.tracking_no.*'        => '|distinct|unique:fast_booking_items,tracking_no',
+            'items.receiver_name.*'      => '',
+            'items.address.*'            => '',
+            'items.pcs.*'                => '|integer|min:1',
+            'items.weight.*'             => '|numeric|min:0.01',
+            'items.amount.*'             => '|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -172,6 +174,8 @@ class HubController extends Controller
                 'to_branch_id'   => $request->to_branch_id,
                 'network'        => $request->network,
                 'payment_type'   => $request->payment_type,
+                'forwarding_no'  => $request->forwarding_no,
+                'eway_bill_no'   => $request->eway_bill_no,
                 'slip_no'        => $request->slip_no,
                 'total_pcs'      => $totalPcs,
                 'total_weight'   => $totalWeight,
@@ -211,6 +215,87 @@ class HubController extends Controller
     }
 
 
+    public function fastbooking_update(Request $request, $id)
+{
+    $request->validate([
+        'booking_no'                 => 'nullable|string|max:50',
+        'from_branch_id'             => 'nullable|exists:hubs,id',
+        'to_branch_id'               => 'nullable|exists:hubs,id',
+        'network'                    => 'nullable|string|max:50',
+        'payment_type'               => 'nullable|string|max:50',
+        'forwarding_no'              => 'nullable|string|max:50',
+        'eway_bill_no'               => 'nullable|string|max:20',
+
+        'items.tracking_no.*'        => 'distinct',
+        'items.receiver_name.*'      => '',
+        'items.address.*'            => '',
+        'items.pcs.*'                => 'integer|min:1',
+        'items.weight.*'             => 'numeric|min:0.01',
+        'items.amount.*'             => 'numeric|min:0',
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        $booking = FastBooking::findOrFail($id);
+
+        /* ---------- CALCULATE TOTALS ---------- */
+        $totalPcs = array_sum($request->items['pcs']);
+        $totalWeight = array_sum($request->items['weight']);
+        $totalAmount = array_sum($request->items['amount']);
+
+        /* ---------- UPDATE FAST BOOKING (MASTER) ---------- */
+        $booking->update([
+            'booking_no'     => $request->booking_no,
+            'from_branch_id' => $request->from_branch_id,
+            'to_branch_id'   => $request->to_branch_id,
+            'network'        => $request->network,
+            'payment_type'   => $request->payment_type,
+            'forwarding_no'  => $request->forwarding_no,
+            'eway_bill_no'   => $request->eway_bill_no,
+            'slip_no'        => $request->slip_no ?? $booking->slip_no, // agar slip_no bhi update karna ho
+            'total_pcs'      => $totalPcs,
+            'total_weight'   => $totalWeight,
+            'total_amount'   => $totalAmount,
+            'remark'         => $request->remark,
+        ]);
+
+        /* ---------- UPDATE ITEMS ---------- */
+        // Delete old items first
+        $booking->items()->delete();
+
+        // Create new items from request
+        foreach ($request->items['tracking_no'] as $index => $trackingNo) {
+            FastBookingItem::create([
+                'fast_booking_id' => $booking->id,
+                'tracking_no'     => $trackingNo,
+                'receiver_name'   => $request->items['receiver_name'][$index],
+                'address'         => $request->items['address'][$index],
+                'pcs'             => $request->items['pcs'][$index],
+                'weight'          => $request->items['weight'][$index],
+                'amount'          => $request->items['amount'][$index],
+            ]);
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Fast Booking updated successfully',
+            'redirect' => route('fast_bookings.index'),
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+}
+
+
+
 
     public function fastbooking_edit($id)
     {
@@ -230,66 +315,9 @@ class HubController extends Controller
         return view('backend.fastbooking.create', compact('booking', 'branches', 'networks'));
     }
 
-    public function fastbooking_update(Request $request, $id)
-    {
-        $request->validate([
-            'tracking_no'   => 'required', // edit me unique nahi
-            'from_station'  => 'required',
-            'network'       => 'required',
-            'receiver_name' => 'required',
-            'address'       => 'required',
-            'pieces'        => 'required|integer',
-            'weight'        => 'required|numeric',
-            'paid_amount'   => 'required|numeric',
-        ]);
 
-        DB::beginTransaction();
 
-        try {
 
-            // 🔹 MASTER BOOKING
-            $booking = FastBooking::findOrFail($id);
-
-            $booking->update([
-                'from_branch_id' => 5, // abhi demo
-                'to_branch_id'   => 6,
-                'network_id'     => null,
-                'payment_type'   => ($request->cod_amount > 0) ? 'COD' : 'CASH',
-                'total_pcs'      => $request->pieces,
-                'total_weight'   => $request->weight,
-                'total_amount'   => $request->paid_amount,
-                'cod_amount'     => $request->cod_amount ?? 0,
-                'remark'         => $request->remark,
-            ]);
-
-            // 🔹 ITEM (single tracking)
-            $item = FastBookingItem::where('fast_booking_id', $booking->id)->firstOrFail();
-
-            $item->update([
-                // tracking_no edit me readonly hai isliye update nahi
-                'receiver_name' => $request->receiver_name,
-                'address'       => $request->address,
-                'pcs'           => $request->pieces,
-                'weight'        => $request->weight,
-                'amount'        => $request->paid_amount,
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'status'  => true,
-                'message' => 'Fast Booking updated successfully',
-            ]);
-        } catch (\Exception $e) {
-
-            DB::rollBack();
-
-            return response()->json([
-                'status'  => false,
-                'message' => $e->getMessage(),
-            ], 500);
-        }
-    }
 
     public function fastbooking_view(Request $request) {}
 
@@ -316,7 +344,7 @@ class HubController extends Controller
     public function printShipper()
     {
         $bookingsData = FastBooking::with(['items'])->get();
-        logger('latest', ['data'=> $bookingsData]);
+        logger('latest', ['data' => $bookingsData]);
         return view('backend.fastbooking.print_shipper', compact('bookingsData'));
     }
 
