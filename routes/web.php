@@ -114,7 +114,7 @@ use App\Http\Controllers\InstallerController;
 
 
 use App\Http\Controllers\BranchController;
-
+use Illuminate\Support\Facades\Auth;
 
 //installer
 Route::middleware(['XSS', 'IsNotInstalled'])->group(function () {
@@ -132,7 +132,10 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
     //frontend
     Route::controller(FrontendController::class)->group(function () {
         Route::get('/', 'index')->name('home');
-        Route::get('/tracking', 'tracking')->name('tracking.index');
+        // Route::get('/tracking', 'tracking')->name('tracking.index');
+        Route::get('/tracking', [HubController::class, 'tracking_index'])
+            ->name('tracking.index');
+
         Route::get('/about-us', 'aboutUs')->name('aboutus.index');
         Route::get('/our-services', 'ourServices')->name('services.index');
         Route::get('/pincode-list', 'pincodeList')->name('pincode.index');
@@ -217,6 +220,12 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
                 Route::get('/drs/create', [HubController::class, 'drs_create'])->name('drs.create');
                 Route::get('/drs/get-entries', [HubController::class, 'getEntriesData'])->name('drs.get-entries');
 
+
+                ///tacking route
+
+                Route::get('/track-consignment', [HubController::class, 'tracking_index'])->name('hub.track.index');
+                Route::get('/track-consignment/search', [HubController::class, 'tracking_search'])->name('hub.track.search');
+                // drs route
                 Route::get('/drs/estimate', [HubController::class, 'drs_estimate'])->name('drs.estimate');
                 Route::get('/drs/drs-search', [HubController::class, 'estimate_data'])->name('drs.search');
                 Route::get('/drs/{id}', [HubController::class, 'drs_view'])->name('drs.show');

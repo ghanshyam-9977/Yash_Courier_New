@@ -12,6 +12,7 @@ use App\Enums\ApprovalStatus;
 use App\Models\BranchPaymentGet;
 use Illuminate\Http\Request;
 use App\Models\BranchPaymentRequest;
+use App\Models\ConsignmentStatusHistory;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Support\Facades\Log;
 
@@ -326,9 +327,9 @@ class HubPaymentRequestController extends Controller
             $isCod = $request->has('is_cod');
 
             $validated = $request->validate([
-                'request_type' => '|in:in,out',
+                'request_type' => 'required|in:in,out',
                 'item_type' => '|string',
-                'tracking_number' => '|string',
+                'tracking_number' => 'required|string',
                 'manifest_no' => '|string',
                 'from_branch_id' => '',
                 'to_branch_id' => '',
@@ -358,6 +359,8 @@ class HubPaymentRequestController extends Controller
 
             $validated['is_cod'] = $isCod ? 1 : 0;
             $validated['include_gst'] = $request->has('include_gst') ? 1 : 0;
+            $validated['is_return'] = $validated['is_return'] ?? 0;
+
 
             if (!$validated['is_cod']) {
                 $validated['cod_amount'] = null;
@@ -399,7 +402,28 @@ class HubPaymentRequestController extends Controller
             // GENERATE UNIQUE MANIFEST NO
             // $validated['manifest_no'] = $this->generateManifestNo($validated['request_type']);
 
-            BranchPaymentRequest::create($validated);
+            $bpr = BranchPaymentRequest::create($validated);
+            if ($validated['request_type'] === 'out') {
+                ConsignmentStatusHistory::create([
+                    'tracking_number' => $validated['tracking_number'],
+                    'status' => 'in_transit',
+                    'remarks' => 'Out manifest generated',
+                    'manifest_no' => $validated['manifest_no'] ?? null,
+                    'branch_id' => $validated['from_branch_id'] ?? null,
+                    // 'to_branch_id' => $validated['to_branch_id'] ?? null,
+                ]);
+            } elseif ($validated['request_type'] === 'in') {
+                ConsignmentStatusHistory::create([
+                    'tracking_number' => $validated['tracking_number'],
+                    'status' => 'at_destination_branch',
+                    'remarks' => 'In manifest received',
+                    'manifest_no' => $validated['manifest_no'] ?? null,
+                    // 'from_branch_id' => $validated['from_branch_id'] ?? null,
+                    'branch_id' => $validated['to_branch_id'] ?? null,
+                ]);
+            }
+
+
 
             if ($request->ajax()) {
                 return response()->json([
@@ -679,6 +703,8 @@ class HubPaymentRequestController extends Controller
         return response()->json(['branches' => $branches]);
     }
 
+
+    public function tracking_data() {}
 
     public function getStateByCity(Request $request)
     {

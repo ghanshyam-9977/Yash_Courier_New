@@ -61,13 +61,19 @@ class DeliveryMan extends Model
         return $this->belongsTo(Upload::class, 'driving_license_image_id', 'id');
     }
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    // public function user()
+    // {
+    //     return $this->belongsTo(User::class);
+    // }
 
     public function hub()
     {
         return $this->belongsTo(Hub::class, 'hub_id', 'id');
     }
+
+    public function user()
+{
+    return $this->belongsTo(User::class, 'user_id', 'id');
+}
+
 }

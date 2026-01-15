@@ -8,6 +8,7 @@ use App\Exports\HubExport;
 use App\Http\Controllers\Controller;
 use App\Models\Backend\DeliveryMan;
 use App\Models\Backend\Hub;
+use App\Models\ConsignmentStatusHistory;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -20,12 +21,15 @@ use App\Models\Backend\FastBookingItem;
 use App\Models\Backend\Parcel;
 use App\Repositories\Hub\HubInterface;
 use App\Models\BranchPaymentGet;
+use App\Models\BranchPaymentRequest;
 use App\Repositories\HubManage\HubPayment\HubPaymentInterface;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use League\Config\Exception\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException as ValidatorsValidationException;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class HubController extends Controller
@@ -80,6 +84,10 @@ class HubController extends Controller
         ])
             ->orderBy('id', 'desc')
             ->paginate(10);
+
+        // logger('data', [
+        //     'drsEntries' => $drsEntries
+        // ]);
 
         return view('backend.drs.drs', compact('drsEntries', 'request'));
     }
@@ -198,6 +206,16 @@ class HubController extends Controller
 
             DB::commit();
 
+            foreach ($request->items['tracking_no'] as $trackingNo) {
+                ConsignmentStatusHistory::create([
+                    'tracking_number' => $trackingNo,
+                    'status' => 'fast_booked',  // ya 'fast_booked', jo bhi tum use karte ho
+                    'remarks' => 'Fast booking created',
+                    'branch_id' => $request->from_branch_id ?? null,
+                    'created_at' => now(),
+                ]);
+            }
+
             return response()->json([
                 'success'  => true,
                 'message'  => 'Fast Booking created successfully',
@@ -216,83 +234,83 @@ class HubController extends Controller
 
 
     public function fastbooking_update(Request $request, $id)
-{
-    $request->validate([
-        'booking_no'                 => 'nullable|string|max:50',
-        'from_branch_id'             => 'nullable|exists:hubs,id',
-        'to_branch_id'               => 'nullable|exists:hubs,id',
-        'network'                    => 'nullable|string|max:50',
-        'payment_type'               => 'nullable|string|max:50',
-        'forwarding_no'              => 'nullable|string|max:50',
-        'eway_bill_no'               => 'nullable|string|max:20',
+    {
+        $request->validate([
+            'booking_no'                 => 'nullable|string|max:50',
+            'from_branch_id'             => 'nullable|exists:hubs,id',
+            'to_branch_id'               => 'nullable|exists:hubs,id',
+            'network'                    => 'nullable|string|max:50',
+            'payment_type'               => 'nullable|string|max:50',
+            'forwarding_no'              => 'nullable|string|max:50',
+            'eway_bill_no'               => 'nullable|string|max:20',
 
-        'items.tracking_no.*'        => 'distinct',
-        'items.receiver_name.*'      => '',
-        'items.address.*'            => '',
-        'items.pcs.*'                => 'integer|min:1',
-        'items.weight.*'             => 'numeric|min:0.01',
-        'items.amount.*'             => 'numeric|min:0',
-    ]);
-
-    DB::beginTransaction();
-
-    try {
-        $booking = FastBooking::findOrFail($id);
-
-        /* ---------- CALCULATE TOTALS ---------- */
-        $totalPcs = array_sum($request->items['pcs']);
-        $totalWeight = array_sum($request->items['weight']);
-        $totalAmount = array_sum($request->items['amount']);
-
-        /* ---------- UPDATE FAST BOOKING (MASTER) ---------- */
-        $booking->update([
-            'booking_no'     => $request->booking_no,
-            'from_branch_id' => $request->from_branch_id,
-            'to_branch_id'   => $request->to_branch_id,
-            'network'        => $request->network,
-            'payment_type'   => $request->payment_type,
-            'forwarding_no'  => $request->forwarding_no,
-            'eway_bill_no'   => $request->eway_bill_no,
-            'slip_no'        => $request->slip_no ?? $booking->slip_no, // agar slip_no bhi update karna ho
-            'total_pcs'      => $totalPcs,
-            'total_weight'   => $totalWeight,
-            'total_amount'   => $totalAmount,
-            'remark'         => $request->remark,
+            'items.tracking_no.*'        => 'distinct',
+            'items.receiver_name.*'      => '',
+            'items.address.*'            => '',
+            'items.pcs.*'                => 'integer|min:1',
+            'items.weight.*'             => 'numeric|min:0.01',
+            'items.amount.*'             => 'numeric|min:0',
         ]);
 
-        /* ---------- UPDATE ITEMS ---------- */
-        // Delete old items first
-        $booking->items()->delete();
+        DB::beginTransaction();
 
-        // Create new items from request
-        foreach ($request->items['tracking_no'] as $index => $trackingNo) {
-            FastBookingItem::create([
-                'fast_booking_id' => $booking->id,
-                'tracking_no'     => $trackingNo,
-                'receiver_name'   => $request->items['receiver_name'][$index],
-                'address'         => $request->items['address'][$index],
-                'pcs'             => $request->items['pcs'][$index],
-                'weight'          => $request->items['weight'][$index],
-                'amount'          => $request->items['amount'][$index],
+        try {
+            $booking = FastBooking::findOrFail($id);
+
+            /* ---------- CALCULATE TOTALS ---------- */
+            $totalPcs = array_sum($request->items['pcs']);
+            $totalWeight = array_sum($request->items['weight']);
+            $totalAmount = array_sum($request->items['amount']);
+
+            /* ---------- UPDATE FAST BOOKING (MASTER) ---------- */
+            $booking->update([
+                'booking_no'     => $request->booking_no,
+                'from_branch_id' => $request->from_branch_id,
+                'to_branch_id'   => $request->to_branch_id,
+                'network'        => $request->network,
+                'payment_type'   => $request->payment_type,
+                'forwarding_no'  => $request->forwarding_no,
+                'eway_bill_no'   => $request->eway_bill_no,
+                'slip_no'        => $request->slip_no ?? $booking->slip_no, // agar slip_no bhi update karna ho
+                'total_pcs'      => $totalPcs,
+                'total_weight'   => $totalWeight,
+                'total_amount'   => $totalAmount,
+                'remark'         => $request->remark,
             ]);
+
+            /* ---------- UPDATE ITEMS ---------- */
+            // Delete old items first
+            $booking->items()->delete();
+
+            // Create new items from request
+            foreach ($request->items['tracking_no'] as $index => $trackingNo) {
+                FastBookingItem::create([
+                    'fast_booking_id' => $booking->id,
+                    'tracking_no'     => $trackingNo,
+                    'receiver_name'   => $request->items['receiver_name'][$index],
+                    'address'         => $request->items['address'][$index],
+                    'pcs'             => $request->items['pcs'][$index],
+                    'weight'          => $request->items['weight'][$index],
+                    'amount'          => $request->items['amount'][$index],
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Fast Booking updated successfully',
+                'redirect' => route('fast_bookings.index'),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
-
-        DB::commit();
-
-        return response()->json([
-            'success'  => true,
-            'message'  => 'Fast Booking updated successfully',
-            'redirect' => route('fast_bookings.index'),
-        ]);
-    } catch (\Exception $e) {
-        DB::rollBack();
-
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage(),
-        ], 500);
     }
-}
 
 
 
@@ -419,6 +437,13 @@ class HubController extends Controller
                     'receiver_name'  => $shipment['receiver_name'],
                     'address'        => $shipment['area'], // Assuming area as address for now
                 ]);
+                ConsignmentStatusHistory::create([
+                    'tracking_number' => $shipment['tracking_no'],
+                    'status' => 'out_for_delivery',
+                    'remarks' => 'Shipment out for delivery',
+                    'drs_id' => $drs->id,
+                    'branch_id' => $shipment['area'],
+                ]);
             }
 
             DB::commit();
@@ -486,25 +511,78 @@ class HubController extends Controller
     public function drs_update(Request $request, $id)
     {
         $request->validate([
-            'drs_status'    => 'required|in:out_for_delivery,delivered,undelivered',
-            'delivery_date' => 'nullable|date',
-            'remarks'       => 'nullable|string|max:255',
+            'drs_status'        => 'required|in:out_for_delivery,delivered,undelivered',
+            'delivery_date'     => 'nullable|date',
+            'remarks'           => 'nullable|string|max:255',
+            'scan_tracking_no'  => 'nullable|string',  // naya input: scanned tracking number
         ]);
 
-        $drs = DrsEntry::findOrFail($id);
+        DB::transaction(function () use ($request, $id) {
 
-        $drs->drs_status    = $request->drs_status;
-        $drs->delivery_date = $request->delivery_date ?? Carbon::now()->toDateString();
-        $drs->remarks       = $request->remarks;
-        $drs->updated_by    = auth()->id(); // login user
-        $drs->is_closed     = ($request->drs_status == 'delivered') ? 1 : 0;
+            $drs = DrsEntry::findOrFail($id);
 
-        $drs->save();
+            $drs->drs_status    = $request->drs_status;
+            $drs->delivery_date = $request->delivery_date ?? now()->toDateString();
+            $drs->remarks       = $request->remarks;
+            $drs->updated_by    = auth()->id();
+            $drs->is_closed     = ($request->drs_status === 'delivered') ? 1 : 0;
+            $drs->save();
+
+            // Agar scan_tracking_no diya gaya hai, to sirf wahi shipment update karo
+            if ($request->filled('scan_tracking_no')) {
+                $shipment = DrsShipment::where('drs_entry_id', $drs->id)
+                    ->where('tracking_no', $request->scan_tracking_no)
+                    ->first();
+
+                if ($shipment) {
+                    // Status ko mapping karo, jese delivered => delivered, undelivered => delivery_failed etc.
+                    $status = match ($request->drs_status) {
+                        'delivered' => 'delivered',
+                        'undelivered' => 'delivery_failed',
+                        default => 'out_for_delivery',
+                    };
+
+                    ConsignmentStatusHistory::create([
+                        'tracking_number' => $shipment->tracking_no,
+                        'status'          => $status,
+                        'remarks'         => $request->remarks ?? ucfirst(str_replace('_', ' ', $status)),
+                        'drs_id'          => $drs->id,
+                        'branch_id'       => auth()->user()->branch_id ?? null,
+                        'created_at'      => now(),
+                    ]);
+                } else {
+                    // Agar tracking number galat hai to error throw kar sakte ho ya ignore kar sakte ho
+                    throw ValidatorsValidationException::withMessages([
+                        'scan_tracking_no' => 'Invalid tracking number for this DRS.',
+                    ]);
+                }
+            } else {
+                // Agar scan_tracking_no nahi diya, to saare shipments ke liye update karo (old behavior)
+                $shipments = DrsShipment::where('drs_entry_id', $drs->id)->get();
+
+                foreach ($shipments as $shipment) {
+                    $status = match ($request->drs_status) {
+                        'delivered' => 'delivered',
+                        'undelivered' => 'delivery_failed',
+                        default => 'out_for_delivery',
+                    };
+
+                    ConsignmentStatusHistory::create([
+                        'tracking_number' => $shipment->tracking_no,
+                        'status'          => $status,
+                        'remarks'         => $request->remarks ?? ucfirst(str_replace('_', ' ', $status)),
+                        'branch_id'          => $drs->id,
+                        'created_at'      => now(),
+                    ]);
+                }
+            }
+        });
 
         return redirect()
             ->route('drs.index')
-            ->with('success', 'DRS updated successfully');
+            ->with('success', 'DRS updated and tracking history added successfully');
     }
+
     public function drs_remove()
     {
         // return view('backend.drs.create');
@@ -1011,5 +1089,45 @@ class HubController extends Controller
         logger()->info('DRS Entry Data:', ['data' => $data]);
 
         return response()->json($data);
+    }
+
+    public function tracking_index(Request $request)
+    {
+        return view('backend.hub.tracking.index');
+    }
+
+    public function tracking_search(Request $request)
+    {
+        $request->validate([
+            'tracking_number' => 'required|string|max:100',
+        ]);
+
+        $trackingNumber = trim($request->tracking_number);
+
+        // 1️⃣ Main consignment data
+        $consignment = BranchPaymentRequest::where('tracking_number', $trackingNumber)
+            ->with(['fromBranch', 'toBranch'])
+            ->first();
+
+        if (!$consignment) {
+            return back()->with('error', 'Tracking number not found. Please check and try again.');
+        }
+
+        // 2️⃣ Tracking history (REAL source)
+        $trackingHistory = ConsignmentStatusHistory::where('tracking_number', $trackingNumber)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        if ($trackingHistory->isEmpty()) {
+            return back()->with('error', 'No tracking updates found for this consignment.');
+        }
+
+        // 3️⃣ Current status = last record
+        $currentStatus = $trackingHistory->last();
+
+        return view(
+            'backend.hub.tracking.index',
+            compact('consignment', 'trackingHistory', 'currentStatus')
+        );
     }
 }

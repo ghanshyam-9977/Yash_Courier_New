@@ -109,10 +109,10 @@
                             </div>
 
                             <div class="col-md-8">
-                                <label class="form-label">Scam Tracking No</label>
+                                <label class="form-label">Scan Tracking No</label>
                                 <input type="text" class="form-control"
-                                    name="scam_tracking_no"
-                                    value="{{ old('scam_tracking_no', $drs->scam_tracking_no) }}">
+                                    name="scan_tracking_no"
+                                    value="{{ old('scan_tracking_no', $drs->scan_tracking_no) }}">
                             </div>
                         </div>
 
