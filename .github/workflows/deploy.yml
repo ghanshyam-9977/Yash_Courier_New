@@ -19,27 +19,32 @@ jobs:
           script: |
             set -e
 
-            echo "🚀 Deploying Laravel App"
-            cd /var/www/yash
+            APP_PATH="/var/www/yash"
 
-            echo "📥 Pull latest code (as ubuntu)"
+            echo "🚀 Deploying Laravel App"
+            cd $APP_PATH
+
+            echo "🔐 Step 1: Temporarily give ownership to ubuntu (for git)"
+            sudo chown -R ubuntu:ubuntu $APP_PATH
+
+            echo "📥 Step 2: Pull latest code"
             git pull origin main
 
-            echo "🔐 Fix Laravel permissions (runtime only)"
-            sudo chown -R www-data:www-data .
-            sudo chown -R ubuntu:ubuntu .git
-            sudo chmod -R 775 storage bootstrap/cache
+            echo "🔁 Step 3: Restore Laravel production ownership"
+            sudo chown -R www-data:www-data $APP_PATH
+            sudo chown -R ubuntu:ubuntu $APP_PATH/.git
+            sudo chmod -R 775 $APP_PATH/storage $APP_PATH/bootstrap/cache
 
-            echo "📦 Install PHP dependencies"
+            echo "📦 Step 4: Install PHP dependencies"
             sudo -u www-data composer install --no-dev --optimize-autoloader
 
-            echo "🧹 Optimize Laravel"
+            echo "🧹 Step 5: Optimize Laravel"
             sudo -u www-data php artisan optimize:clear
             sudo -u www-data php artisan config:cache
             #sudo -u www-data php artisan route:cache
             sudo -u www-data php artisan view:cache
 
-            echo "🔁 Restart services"
+            echo "🔁 Step 6: Restart services"
             sudo systemctl restart php8.2-fpm
             sudo systemctl reload nginx
 
