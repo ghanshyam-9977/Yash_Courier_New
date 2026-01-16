@@ -1112,47 +1112,115 @@ class HubController extends Controller
         return view('backend.hub.tracking.drs_tracking_index', compact('drsList'));
     }
 
-    public function drs_tracking_record(Request $request)
-    {
-        logger()->info('DRS Tracking Record API called', [
-            'tracking_no' => $request->tracking_no,
+
+  public function drs_tracking_record(Request $request)
+{
+    // Suppose user sends input without keys, you get the first input value like this:
+    // Agar request mein JSON hai ya form-data hai, to sab inputs lo aur pehli value le lo
+    $inputData = $request->all();
+
+    // Pehli value nikal lete hain
+    $inputValue = null;
+    if (!empty($inputData)) {
+        // Pehli input value uthao (jo bhi ho)
+        $inputValue = reset($inputData);
+    }
+
+    if (!$inputValue) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Tracking number or DRS number is required'
         ]);
-        $trackingNo = $request->tracking_no;
+    }
 
-        if (!$trackingNo) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tracking number is required'
-            ]);
-        }
+    // 1. Pehle tracking number samajh ke search karo
+    $shipment = DrsShipment::with('drsEntry')
+        ->where('tracking_no', $inputValue)
+        ->first();
 
-        // Shipment with DRS
-        $shipment = DrsShipment::with('drsEntry')
-            ->where('tracking_no', $trackingNo)
-            ->first();
+    if ($shipment) {
+        return $this->formatSingleShipmentResponse($shipment);
+    }
 
-        if (!$shipment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tracking number not found'
-            ]);
-        }
+    // 2. Agar tracking number nahi mila, to drs number samajh ke check karo
+    $drsEntry = DrsEntry::where('drs_no', $inputValue)->first();
 
-        // Status history
+    if (!$drsEntry) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Tracking number or DRS number not found'
+        ]);
+    }
+
+    $shipments = DrsShipment::with('drsEntry')
+        ->where('drs_entry_id', $drsEntry->id)
+        ->get();
+
+    if ($shipments->isEmpty()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'No shipments found for this DRS number'
+        ]);
+    }
+
+    $data = $shipments->map(function ($shipment) {
+        $usedTrackingNo = $shipment->tracking_no;
+
         $histories = \DB::table('consignment_status_histories')
-            ->where('tracking_number', $trackingNo)
+            ->where('tracking_number', $usedTrackingNo)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        logger()->info('Tracking Record fetched', [
-            'tracking_no' => $trackingNo,
-            'shipment' => $shipment,
-            'histories_count' => $histories->count(),
-        ]);
+        $currentStatus = $shipment->drsEntry->drs_status ?? 'pending';
+
+        $progress = match ($currentStatus) {
+            'pending' => 30,
+            'out_for_delivery' => 70,
+            'delivered' => 100,
+            'undelivered' => 90,
+            default => 20
+        };
+
+        return [
+            'trackingNo' => $usedTrackingNo,
+            'receiver'   => $shipment->receiver_name,
+            'address'    => $shipment->address,
+            'weight'     => $shipment->weight,
+            'pcs'        => $shipment->pcs,
+            'drsNo'      => $shipment->drsEntry->drs_no ?? null,
+            'area'       => $shipment->drsEntry->area_name ?? null,
+            'drsDate'    => $shipment->drsEntry->drs_date ?? null,
+            'status'     => strtoupper(str_replace('_', ' ', $currentStatus)),
+            'progress'   => $progress,
+            'updates'    => $histories->map(function ($h) {
+                return [
+                    'status'   => strtoupper(str_replace('_', ' ', $h->status)),
+                    'location' => $h->area ?? '-',
+                    'remarks'  => $h->remarks ?? '-',
+                    'time'     => \Carbon\Carbon::parse($h->created_at)->format('d M Y h:i A'),
+                ];
+            }),
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'data' => $data,
+    ]);
+}
+
+
+    private function formatSingleShipmentResponse($shipment)
+    {
+        $usedTrackingNo = $shipment->tracking_no;
+
+        $histories = \DB::table('consignment_status_histories')
+            ->where('tracking_number', $usedTrackingNo)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $currentStatus = $shipment->drsEntry->drs_status ?? 'pending';
 
-        // Progress %
         $progress = match ($currentStatus) {
             'pending' => 30,
             'out_for_delivery' => 70,
@@ -1164,71 +1232,107 @@ class HubController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'trackingNo'   => $trackingNo,
+                'trackingNo'   => $usedTrackingNo,
                 'receiver'     => $shipment->receiver_name,
                 'address'      => $shipment->address,
                 'weight'       => $shipment->weight,
                 'pcs'          => $shipment->pcs,
-
                 'drsNo'        => $shipment->drsEntry->drs_no ?? null,
                 'area'         => $shipment->drsEntry->area_name ?? null,
                 'drsDate'      => $shipment->drsEntry->drs_date ?? null,
                 'status'       => strtoupper(str_replace('_', ' ', $currentStatus)),
                 'progress'     => $progress,
-
                 'updates'      => $histories->map(function ($h) {
                     return [
                         'status'   => strtoupper(str_replace('_', ' ', $h->status)),
                         'location' => $h->area ?? '-',
                         'remarks'  => $h->remarks ?? '-',
-                        'time'     => Carbon::parse($h->created_at)->format('d M Y h:i A'),
+                        'time'     => \Carbon\Carbon::parse($h->created_at)->format('d M Y h:i A'),
                     ];
-                })
-            ]
+                }),
+            ],
         ]);
     }
 
-    // public function tracking_search(Request $request)
+
+
+    // public function drs_tracking_record(Request $request)
     // {
-    //     $request->validate([
-    //         'tracking_number' => 'required|string|max:100',
+    //     logger()->info('DRS Tracking Record API called', [
+    //         'tracking_no' => $request->tracking_no,
     //     ]);
+    //     $trackingNo = $request->tracking_no;
 
-    //     $trackingNumber = trim($request->tracking_number);
+    //     if (!$trackingNo) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Tracking number is required'
+    //         ]);
+    //     }
 
-    //     // 1️⃣ Main consignment data
-    //     $consignment = BranchPaymentRequest::where('tracking_number', $trackingNumber)
-    //         ->with(['fromHub', 'toHub'])
+    //     // Shipment with DRS
+    //     $shipment = DrsShipment::with('drsEntry')
+    //         ->where('tracking_no', $trackingNo)
     //         ->first();
 
-
-
-    //     if (!$consignment) {
-    //         return back()->with('error', 'Tracking number not found. Please check and try again.');
+    //     if (!$shipment) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Tracking number not found'
+    //         ]);
     //     }
 
-    //     // 2️⃣ Tracking history (REAL source)
-    //     $trackingHistory = ConsignmentStatusHistory::with('branch')
-    //         ->where('tracking_number', $trackingNumber)
-    //         ->orderBy('created_at', 'asc')
+    //     // Status history
+    //     $histories = \DB::table('consignment_status_histories')
+    //         ->where('tracking_number', $trackingNo)
+    //         ->orderBy('created_at', 'desc')
     //         ->get();
 
-    //     logger()->info('data', [
-    //         'tracking_history' => $trackingHistory,
+    //     logger()->info('Tracking Record fetched', [
+    //         'tracking_no' => $trackingNo,
+    //         'shipment' => $shipment,
+    //         'histories_count' => $histories->count(),
     //     ]);
 
-    //     if ($trackingHistory->isEmpty()) {
-    //         return back()->with('error', 'No tracking updates found for this consignment.');
-    //     }
+    //     $currentStatus = $shipment->drsEntry->drs_status ?? 'pending';
 
-    //     // 3️⃣ Current status = last record
-    //     $currentStatus = $trackingHistory->last();
+    //     // Progress %
+    //     $progress = match ($currentStatus) {
+    //         'pending' => 30,
+    //         'out_for_delivery' => 70,
+    //         'delivered' => 100,
+    //         'undelivered' => 90,
+    //         default => 20
+    //     };
 
-    //     return view(
-    //         'backend.hub.tracking.index',
-    //         compact('consignment', 'trackingHistory', 'currentStatus')
-    //     );
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => [
+    //             'trackingNo'   => $trackingNo,
+    //             'receiver'     => $shipment->receiver_name,
+    //             'address'      => $shipment->address,
+    //             'weight'       => $shipment->weight,
+    //             'pcs'          => $shipment->pcs,
+
+    //             'drsNo'        => $shipment->drsEntry->drs_no ?? null,
+    //             'area'         => $shipment->drsEntry->area_name ?? null,
+    //             'drsDate'      => $shipment->drsEntry->drs_date ?? null,
+    //             'status'       => strtoupper(str_replace('_', ' ', $currentStatus)),
+    //             'progress'     => $progress,
+
+    //             'updates'      => $histories->map(function ($h) {
+    //                 return [
+    //                     'status'   => strtoupper(str_replace('_', ' ', $h->status)),
+    //                     'location' => $h->area ?? '-',
+    //                     'remarks'  => $h->remarks ?? '-',
+    //                     'time'     => Carbon::parse($h->created_at)->format('d M Y h:i A'),
+    //                 ];
+    //             })
+    //         ]
+    //     ]);
     // }
+
+
 
     public function tracking_search(Request $request)
     {
