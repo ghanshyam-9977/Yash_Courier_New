@@ -1096,6 +1096,48 @@ class HubController extends Controller
         return view('backend.hub.tracking.index');
     }
 
+    // public function tracking_search(Request $request)
+    // {
+    //     $request->validate([
+    //         'tracking_number' => 'required|string|max:100',
+    //     ]);
+
+    //     $trackingNumber = trim($request->tracking_number);
+
+    //     // 1️⃣ Main consignment data
+    //     $consignment = BranchPaymentRequest::where('tracking_number', $trackingNumber)
+    //         ->with(['fromHub', 'toHub'])
+    //         ->first();
+
+
+
+    //     if (!$consignment) {
+    //         return back()->with('error', 'Tracking number not found. Please check and try again.');
+    //     }
+
+    //     // 2️⃣ Tracking history (REAL source)
+    //     $trackingHistory = ConsignmentStatusHistory::with('branch')
+    //         ->where('tracking_number', $trackingNumber)
+    //         ->orderBy('created_at', 'asc')
+    //         ->get();
+
+    //     logger()->info('data', [
+    //         'tracking_history' => $trackingHistory,
+    //     ]);
+
+    //     if ($trackingHistory->isEmpty()) {
+    //         return back()->with('error', 'No tracking updates found for this consignment.');
+    //     }
+
+    //     // 3️⃣ Current status = last record
+    //     $currentStatus = $trackingHistory->last();
+
+    //     return view(
+    //         'backend.hub.tracking.index',
+    //         compact('consignment', 'trackingHistory', 'currentStatus')
+    //     );
+    // }
+
     public function tracking_search(Request $request)
     {
         $request->validate([
@@ -1104,30 +1146,55 @@ class HubController extends Controller
 
         $trackingNumber = trim($request->tracking_number);
 
-        // 1️⃣ Main consignment data
-        $consignment = BranchPaymentRequest::where('tracking_number', $trackingNumber)
-            ->with(['fromBranch', 'toBranch'])
+        $source = 'normal';
+        $consignment = null;
+
+        // =========================================
+        // 1️⃣ NORMAL BOOKING
+        // =========================================
+        $consignment = BranchPaymentRequest::with(['fromHub', 'toHub'])
+            ->where('tracking_number', $trackingNumber)
             ->first();
 
+        // =========================================
+        // 2️⃣ FAST BOOKING (FALLBACK)
+        // =========================================
         if (!$consignment) {
-            return back()->with('error', 'Tracking number not found. Please check and try again.');
+
+            $consignment = FastBookingItem::with([
+                'fastBooking.fromHub',
+                'fastBooking.toHub',
+            ])
+                ->where('tracking_no', $trackingNumber)
+                ->first();
+
+            if (!$consignment) {
+                return back()->with('error', 'Tracking number not found.');
+            }
+
+            $source = 'fast';
         }
 
-        // 2️⃣ Tracking history (REAL source)
-        $trackingHistory = ConsignmentStatusHistory::where('tracking_number', $trackingNumber)
+        logger()->info('tracking source', [
+            'source' => $source,
+            'tracking' => $trackingNumber,
+            'consignment'=> $consignment
+        ]);
+
+
+        // =========================================
+        // 3️⃣ TRACKING HISTORY
+        // =========================================
+        $trackingHistory = ConsignmentStatusHistory::with('branch')
+            ->where('tracking_number', $trackingNumber)
             ->orderBy('created_at', 'asc')
             ->get();
 
-        if ($trackingHistory->isEmpty()) {
-            return back()->with('error', 'No tracking updates found for this consignment.');
-        }
-
-        // 3️⃣ Current status = last record
         $currentStatus = $trackingHistory->last();
 
         return view(
             'backend.hub.tracking.index',
-            compact('consignment', 'trackingHistory', 'currentStatus')
+            compact('consignment', 'trackingHistory', 'currentStatus', 'source')
         );
     }
 }

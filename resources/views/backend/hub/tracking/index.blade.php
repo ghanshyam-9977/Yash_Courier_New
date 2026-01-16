@@ -17,17 +17,17 @@
         }
 
         /* body {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    min-height: 100vh;
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    padding: 40px 0;
-                } */
+                                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                            min-height: 100vh;
+                                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                            padding: 40px 0;
+                                        } */
 
         .container-main {
             max-width: 900px;
             margin: 0 auto;
             margin-top: 10px
-            /* margin-top: 10px; */
+                /* margin-top: 10px; */
         }
 
         .header-section {
@@ -429,7 +429,7 @@
                             <i class="fas fa-arrow-right"></i> From
                         </div>
                         <div class="info-value">
-                            {{ $consignment->fromBranch->name ?? $consignment->from_branch_id }}
+                            {{ $consignment->fromHub->name ?? $consignment->fastBooking->fromHub->name }}
                         </div>
                     </div>
 
@@ -439,7 +439,9 @@
                             <i class="fas fa-arrow-right"></i> To
                         </div>
                         <div class="info-value">
-                            {{ $consignment->toBranch->name ?? $consignment->to_branch_id }}
+                            {{-- {{ $consignment->toBranch->name ?? $consignment->to_branch_id }} --}}
+                            {{ $consignment->toHub->name ?? $consignment->fastBooking->toHub->name }}
+
                         </div>
                     </div>
 
@@ -491,11 +493,10 @@
                             <div class="timeline-status">
                                 {{ ucfirst(str_replace('_', ' ', $row->status)) }}
                             </div>
-                            @if ($row->location)
                                 <div class="timeline-location">
-                                    <i class="fas fa-map-pin"></i> {{ $row->location }}
+                                    <i class="fas fa-map-pin"></i>
+                                     {{ optional($row->branch)->name ?? 'Unknown Branch' }}
                                 </div>
-                            @endif
                             <div class="timeline-time">
                                 {{ $row->created_at->format('d M Y, h:i A') }}
                             </div>

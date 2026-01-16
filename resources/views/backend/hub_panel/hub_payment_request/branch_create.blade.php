@@ -63,7 +63,7 @@
                             <div class="form-group" id="manifest-container" style="display:none;">
                                 <label for="manifest_no">Manifest No <span class="text-danger">*</span></label>
                                 <input type="text" id="manifest_no" name="manifest_no" class="form-control"
-                                    placeholder="Enter manifest number" value="{{ old('manifest_no') }}" required>
+                                    placeholder="Enter manifest number" value="{{ old('manifest_no') }}" >
                                 <small class="form-text text-muted">Enter the manifest number for this request</small>
                                 @error('manifest_no')
                                     <small class="text-danger">{{ $message }}</small>
@@ -76,7 +76,7 @@
                                 <label for="vehicle_number" id="vehicle-label">Vehicle No<span
                                         class="text-danger">*</span></label>
                                 <input type="text" id="vehicle_number" name="vehicle_no" class="form-control"
-                                    placeholder="Enter vehicle number" value="{{ old('vehicle_no') }}" required>
+                                    placeholder="Enter vehicle number" value="{{ old('vehicle_no') }}">
                                 <small class="form-text text-muted" id="vehicle-hint"></small>
                             </div>
 
@@ -147,19 +147,19 @@
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="item_document" name="item_type" value="document"
                                             class="custom-control-input"
-                                            {{ old('item_type') == 'document' ? 'checked' : '' }} required>
+                                            {{ old('item_type') == 'document' ? 'checked' : '' }} >
                                         <label class="custom-control-label" for="item_document">Document</label>
                                     </div>
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="item_parcel" name="item_type" value="parcel"
                                             class="custom-control-input"
-                                            {{ old('item_type') == 'parcel' ? 'checked' : '' }} required>
+                                            {{ old('item_type') == 'parcel' ? 'checked' : '' }} >
                                         <label class="custom-control-label" for="item_parcel">Parcel</label>
                                     </div>
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="item_urgent" name="item_type" value="urgent"
                                             class="custom-control-input"
-                                            {{ old('item_type') == 'urgent' ? 'checked' : '' }} required>
+                                            {{ old('item_type') == 'urgent' ? 'checked' : '' }} >
                                         <label class="custom-control-label" for="item_urgent">Urgent</label>
                                     </div>
                                 </div>
@@ -229,7 +229,7 @@
                                 <label for="transport_type">{{ __('Transport Type') }} <span
                                         class="text-danger">*</span></label>
                                 <select name="transport_type" id="transport_type"
-                                    class="form-control @error('transport_type') is-invalid @enderror" required>
+                                    class="form-control @error('transport_type') is-invalid @enderror">
                                     <option value="">{{ __('Select Transport Type') }}</option>
                                     <option value="by_road" {{ old('transport_type') == 'by_road' ? 'selected' : '' }}>
                                         {{ __('By Road') }}
@@ -596,33 +596,6 @@
                 $('#cod-container').show();
             }
 
-            // ========== OUT REQUEST HANDLERS ==========
-
-            // From Branch Change (OUT)
-            // $('#from_branch_select').on('change', function() {
-            //     const selectedOption = $(this).find('option:selected');
-            //     const branchId = $(this).val();
-            //     const city = selectedOption.data('city');
-            //     const state = selectedOption.data('state');
-
-            //     if (currentRequestType === 'out' && branchId) {
-            //         // Auto-fill city and state
-            //         if (city) $('#city').val(city);
-            //         if (state) $('#state').val(state);
-
-            //         // Generate tracking number
-            //         generateTrackingNumber();
-
-            //         // Fetch rates if all required fields are selected
-            //         const itemType = $('input[name="item_type"]:checked').val();
-            //         const transportType = $('#transport_type').val();
-
-            //         if (itemType && transportType) {
-            //             fetchOutRates(branchId, itemType, transportType);
-            //         }
-            //     }
-            // });
-
 
             // City input par state fetch karne ke liye
             // City input handler - Updated for multiple states
@@ -972,7 +945,7 @@
                 $('#cod-fields').hide();
                 $('#cod_amount, #cod_remarks').val('');
                 $('#cod_payment_mode').val('');
-                $('#cod_amount').removeAttr('required');
+                $('#cod_amount').removeAttr('');
             }
 
             // Show notification helper

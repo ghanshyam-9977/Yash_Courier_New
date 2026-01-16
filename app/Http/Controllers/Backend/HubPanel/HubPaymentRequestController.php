@@ -9,6 +9,8 @@ use App\Models\Backend\HubPayment;
 use App\Repositories\HubPaymentRequest\HubPaymentRequestInterface;
 use App\Repositories\HubManage\HubPayment\HubPaymentInterface;
 use App\Enums\ApprovalStatus;
+use App\Models\Backend\FastBooking;
+use App\Models\Backend\FastBookingItem;
 use App\Models\BranchPaymentGet;
 use Illuminate\Http\Request;
 use App\Models\BranchPaymentRequest;
@@ -178,7 +180,7 @@ class HubPaymentRequestController extends Controller
     public function branch_create()
     {
         $branches = Hub::all();
-        return view('backend.hub_panel.hub_payment_request.branch_create', compact('branches'));
+        return view('backend.hub_panel.hub_payment_request.branch_create', compact(var_name: 'branches'));
     }
     // public function ledger_index()
     // {
@@ -634,64 +636,135 @@ class HubPaymentRequestController extends Controller
         }
     }
 
+    // public function getRequestByTracking($tracking)
+    // {
+    //     try {
+    //         // Find the OUT request by tracking number
+    //         $request = BranchPaymentRequest::where('tracking_number', $tracking)
+    //             ->where('request_type', 'out')
+    //             ->first();
+
+
+    //         Log::info('Active data', [
+    //             'data' => $request
+    //         ]);
+
+    //         if (!$request) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Tracking number not found or not an OUT request'
+    //             ], 404);
+    //         }
+
+    //         // Get branch details for city and state
+    //         $fromBranch = hub::find($request->from_branch_id);
+    //         $toBranch = BranchPaymentRequest::find($request->to_branch_id);
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => [
+    //                 'tracking_number' => $request->tracking_number,
+    //                 'from_branch_id' => $request->from_branch_id,
+    //                 'from_branch_name' => $fromBranch ? $fromBranch->name : null,
+    //                 'to_branch_id' => $request->to_branch_id,
+    //                 'to_branch_name' => $toBranch ? $toBranch->name : null,
+    //                 // 'city' => $request->city,
+    //                 'city' => $fromBranch->city,
+    //                 'state' => $fromBranch->state,
+    //                 'item_type' => $request->item_type,
+    //                 'transport_type' => $request->transport_type,
+    //                 'unit' => $request->unit,
+    //                 'quantity' => $request->quantity,
+    //                 'amount' => $request->amount,
+    //                 'cgst' => $request->cgst,
+    //                 'vehicle_no' => $request->vehicle_no,
+    //                 'sgst' => $request->sgst,
+    //                 'description' => $request->description,
+    //                 'include_gst' => !empty($request->cgst) || !empty($request->sgst),
+    //                 'is_cod' => $request->is_cod,
+    //                 'cod_amount' => $request->cod_amount,
+    //                 'cod_payment_mode' => $request->cod_payment_mode,
+    //                 'cod_remarks' => $request->cod_remarks,
+    //             ]
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Error fetching tracking details: ' . $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+
     public function getRequestByTracking($tracking)
     {
         try {
-            // Find the OUT request by tracking number
-            $request = BranchPaymentRequest::where('tracking_number', $tracking)
+
+            // 1️⃣ Try OUT manifest
+            $out = BranchPaymentRequest::where('tracking_number', $tracking)
                 ->where('request_type', 'out')
                 ->first();
 
+            if ($out) {
+                $fromBranch = Hub::find($out->from_branch_id);
+                $toBranch   = Hub::find($out->to_branch_id);
 
-            Log::info('Active data', [
-                'data' => $request
-            ]);
-
-            if (!$request) {
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Tracking number not found or not an OUT request'
-                ], 404);
+                    'success' => true,
+                    'source' => 'out',
+                    'data' => [
+                        'tracking_number' => $out->tracking_number,
+                        'from_branch_id' => $out->from_branch_id,
+                        'from_branch_name' => $fromBranch?->name,
+                        'to_branch_id' => $out->to_branch_id,
+                        'to_branch_name' => $toBranch?->name,
+                        'city' => $fromBranch?->city,
+                        'state' => $fromBranch?->state,
+                        'quantity' => $out->quantity,
+                        'amount' => $out->amount,
+                    ]
+                ]);
             }
 
-            // Get branch details for city and state
-            $fromBranch = hub::find($request->from_branch_id);
-            $toBranch = BranchPaymentRequest::find($request->to_branch_id);
+            // 2️⃣ Try FAST BOOKING ITEM
+            $fastItem = FastBookingItem::where('tracking_no', $tracking)->first();
 
+            if ($fastItem) {
+                $fastBooking = FastBooking::find($fastItem->fast_booking_id);
+
+                $fromBranch = Hub::find($fastBooking->from_branch_id);
+                $toBranch   = Hub::find($fastBooking->to_branch_id);
+
+                return response()->json([
+                    'success' => true,
+                    'source' => 'fast',
+                    'data' => [
+                        'tracking_number' => $fastItem->tracking_number,
+                        'from_branch_id' => $fastBooking->from_branch_id,
+                        'from_branch_name' => $fromBranch?->name,
+                        'to_branch_id' => $fastBooking->to_branch_id,
+                        'to_branch_name' => $toBranch?->name,
+                        'city' => $fromBranch?->city,
+                        'state' => $fromBranch?->state,
+                        'quantity' => 1,
+                        'amount' => $fastBooking->total_amount,
+                    ]
+                ]);
+            }
+
+            // 3️⃣ Nothing found
             return response()->json([
-                'success' => true,
-                'data' => [
-                    'tracking_number' => $request->tracking_number,
-                    'from_branch_id' => $request->from_branch_id,
-                    'from_branch_name' => $fromBranch ? $fromBranch->name : null,
-                    'to_branch_id' => $request->to_branch_id,
-                    'to_branch_name' => $toBranch ? $toBranch->name : null,
-                    // 'city' => $request->city,
-                    'city' => $fromBranch->city,
-                    'state' => $fromBranch->state,
-                    'item_type' => $request->item_type,
-                    'transport_type' => $request->transport_type,
-                    'unit' => $request->unit,
-                    'quantity' => $request->quantity,
-                    'amount' => $request->amount,
-                    'cgst' => $request->cgst,
-                    'vehicle_no' => $request->vehicle_no,
-                    'sgst' => $request->sgst,
-                    'description' => $request->description,
-                    'include_gst' => !empty($request->cgst) || !empty($request->sgst),
-                    'is_cod' => $request->is_cod,
-                    'cod_amount' => $request->cod_amount,
-                    'cod_payment_mode' => $request->cod_payment_mode,
-                    'cod_remarks' => $request->cod_remarks,
-                ]
-            ]);
+                'success' => false,
+                'message' => 'Tracking number not found'
+            ], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error fetching tracking details: ' . $e->getMessage()
+                'message' => 'Error: ' . $e->getMessage()
             ], 500);
         }
     }
+
 
     public function getAllBranches()
     {

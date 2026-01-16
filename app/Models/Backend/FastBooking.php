@@ -43,4 +43,14 @@ class FastBooking extends Model
     {
         return $this->belongsTo(Hub::class, 'to_branch_id');
     }
+
+    public function fromHub()
+    {
+        return $this->belongsTo(Hub::class, 'from_branch_id', 'id');
+    }
+
+    public function toHub()
+    {
+        return $this->belongsTo(Hub::class, 'to_branch_id', 'id');
+    }
 }

@@ -31,4 +31,6 @@ class FastBookingItem extends Model
     {
         return $this->belongsTo(FastBooking::class);
     }
+
+    
 }
