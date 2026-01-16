@@ -226,6 +226,8 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
                 ///tacking route
 
                 Route::get('/track-consignment', [HubController::class, 'tracking_index'])->name('hub.track.index');
+                Route::get('/track-consignment', [HubController::class, 'drs_tracking_index'])->name('drs.tracking.index');
+                Route::get('/drs-track', [HubController::class, 'drs_tracking_record']);
                 // drs route
                 Route::get('/drs/estimate', [HubController::class, 'drs_estimate'])->name('drs.estimate');
                 Route::get('/drs/drs-search', [HubController::class, 'estimate_data'])->name('drs.search');

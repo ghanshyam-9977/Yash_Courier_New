@@ -32,6 +32,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException as ValidatorsValidationException;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 
+
 class HubController extends Controller
 {
     protected $repo;
@@ -1095,6 +1096,97 @@ class HubController extends Controller
     {
         return view('backend.hub.tracking.index');
     }
+    public function drs_tracking_index(Request $request)
+    {
+        $query = DrsEntry::with('shipments');
+
+        if ($request->drs_no) {
+            $query->where('drs_no', 'like', '%' . $request->drs_no . '%');
+        }
+
+        if ($request->status) {
+            $query->where('drs_status', $request->status);
+        }
+
+        $drsList = $query->orderBy('drs_date', 'desc')->paginate(15);
+        return view('backend.hub.tracking.drs_tracking_index', compact('drsList'));
+    }
+
+    public function drs_tracking_record(Request $request)
+    {
+        logger()->info('DRS Tracking Record API called', [
+            'tracking_no' => $request->tracking_no,
+        ]);
+        $trackingNo = $request->tracking_no;
+
+        if (!$trackingNo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tracking number is required'
+            ]);
+        }
+
+        // Shipment with DRS
+        $shipment = DrsShipment::with('drsEntry')
+            ->where('tracking_no', $trackingNo)
+            ->first();
+
+        if (!$shipment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tracking number not found'
+            ]);
+        }
+
+        // Status history
+        $histories = \DB::table('consignment_status_histories')
+            ->where('tracking_number', $trackingNo)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        logger()->info('Tracking Record fetched', [
+            'tracking_no' => $trackingNo,
+            'shipment' => $shipment,
+            'histories_count' => $histories->count(),
+        ]);
+
+        $currentStatus = $shipment->drsEntry->drs_status ?? 'pending';
+
+        // Progress %
+        $progress = match ($currentStatus) {
+            'pending' => 30,
+            'out_for_delivery' => 70,
+            'delivered' => 100,
+            'undelivered' => 90,
+            default => 20
+        };
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'trackingNo'   => $trackingNo,
+                'receiver'     => $shipment->receiver_name,
+                'address'      => $shipment->address,
+                'weight'       => $shipment->weight,
+                'pcs'          => $shipment->pcs,
+
+                'drsNo'        => $shipment->drsEntry->drs_no ?? null,
+                'area'         => $shipment->drsEntry->area_name ?? null,
+                'drsDate'      => $shipment->drsEntry->drs_date ?? null,
+                'status'       => strtoupper(str_replace('_', ' ', $currentStatus)),
+                'progress'     => $progress,
+
+                'updates'      => $histories->map(function ($h) {
+                    return [
+                        'status'   => strtoupper(str_replace('_', ' ', $h->status)),
+                        'location' => $h->area ?? '-',
+                        'remarks'  => $h->remarks ?? '-',
+                        'time'     => Carbon::parse($h->created_at)->format('d M Y h:i A'),
+                    ];
+                })
+            ]
+        ]);
+    }
 
     // public function tracking_search(Request $request)
     // {
@@ -1178,7 +1270,7 @@ class HubController extends Controller
         logger()->info('tracking source', [
             'source' => $source,
             'tracking' => $trackingNumber,
-            'consignment'=> $consignment
+            'consignment' => $consignment
         ]);
 
 

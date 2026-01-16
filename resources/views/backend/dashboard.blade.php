@@ -8,7 +8,7 @@
         <!-- pageheader  -->
         <div class="row">
             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                <div class="page-header">
+                {{-- <div class="page-header">
                     <div class="page-breadcrumb">
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
@@ -19,7 +19,30 @@
                             </ol>
                         </nav>
                     </div>
+                </div> --}}
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div class="page-breadcrumb">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="{{ url('/') }}" class="breadcrumb-link">
+                                        {{ __('menus.dashboard') }}
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active" aria-current="page">
+                                    {{ settings()->name }} {{ __('menus.dashboard') }}
+                                </li>
+                            </ol>
+                        </nav>
+                    </div>
+
+                    <div class="page-actions">
+                        <a href="{{ route('drs.tracking.index') }}" class="btn btn-sm btn-default">
+                            <i class="fas fa-truck"></i> DRS Tracking
+                        </a>
+                    </div>
                 </div>
+
             </div>
         </div>
         <!-- end pageheader  -->
@@ -38,7 +61,7 @@
 
                 </div>
             </div>
-            <div class="row header-summery"> 
+            <div class="row header-summery">
 
 
                 @if (hasPermission('total_parcel') == true)
@@ -368,8 +391,8 @@
     <!-- Tempus Dominus Styles -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/eonasdan-bootstrap-datetimepicker/4.17.49/css/bootstrap-datetimepicker.min.css"
-        integrity="sha512-ipfmbgqfdejR27dWn02UftaAzUfxJ3HR4BDQYuITYSj6ZQfGT1NulP4BOery3w/dT2PYAe3bG5Zm/owm7MuFhA==" crossorigin="anonymous"
-        referrerpolicy="no-referrer" />
+        integrity="sha512-ipfmbgqfdejR27dWn02UftaAzUfxJ3HR4BDQYuITYSj6ZQfGT1NulP4BOery3w/dT2PYAe3bG5Zm/owm7MuFhA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         .notification .nav-link.nav-icons {
             margin-top: 0px !important;
