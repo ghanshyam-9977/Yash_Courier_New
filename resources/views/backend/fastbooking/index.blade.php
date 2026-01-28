@@ -77,10 +77,10 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Booking No</th>
+                                {{-- <th>Booking No</th> --}}
                                 <th>From</th>
-                                <th>To</th>
-                                <th>Payment</th>
+                                {{-- <th>To</th> --}}
+                                {{-- <th>Payment</th> --}}
                                 <th class="text-center">Pcs</th>
                                 <th class="text-center">Weight</th>
                                 <th class="text-right">Amount</th>
@@ -92,15 +92,15 @@
                                 <tr>
                                     <td>{{ $fastBookings->firstItem() + $key }}</td>
 
-                                    <td>
+                                    {{-- <td>
                                         <span class="booking-badge">{{ $booking->booking_no }}</span>
-                                    </td>
+                                    </td> --}}
 
                                     <td>{{ $booking->sourceHub->name ?? '-' }}</td>
-                                    <td>{{ $booking->destinationHub->name ?? '-' }}</td>
+                                    {{-- <td>{{ $booking->destinationHub->name ?? '-' }}</td> --}}
 
 
-                                    <td>{{ $booking->payment_type }}</td>
+                                    {{-- <td>{{ $booking->payment_type }}</td> --}}
 
                                     <td class="text-center">{{ $booking->total_pcs }}</td>
 

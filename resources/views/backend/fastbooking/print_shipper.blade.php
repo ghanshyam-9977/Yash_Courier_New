@@ -2,6 +2,7 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <title>Fast Booking Shipper Print</title>
@@ -35,7 +36,8 @@
             font-size: 12px;
         }
 
-        th, td {
+        th,
+        td {
             border: 1px solid #000;
             padding: 6px 8px;
             text-align: left;
@@ -98,6 +100,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <button class="print-button" onclick="window.print()">Print this page</button>
@@ -110,69 +113,54 @@
 
             <table>
                 <tr>
-                    <th>From Branch ID</th>
-                    <td>{{ $booking->from_branch_id }}</td>
-
-                    <th>To Branch ID</th>
-                    <td>{{ $booking->to_branch_id }}</td>
-                </tr>
-                <tr>
-                    <th>Payment Type</th>
-                    <td>{{ $booking->payment_type }}</td>
-
-                    <th>Slip No</th>
-                    <td>{{ $booking->booking_no ?? '-' }}</td>
-                </tr>
-                <tr>
+                    <th>From Booking Station</th>
+                    <td>{{ $booking->fromHub->name ?? '-' }}</td>
                     <th>Total Pieces</th>
                     <td>{{ $booking->total_pcs }}</td>
-
+                </tr>
+                <tr>
                     <th>Total Weight</th>
                     <td>{{ $booking->total_weight }}</td>
-                </tr>
-                <tr>
                     <th>Total Amount</th>
                     <td>{{ $booking->total_amount }}</td>
-
-                    <th>COD Amount</th>
-                    <td>{{ $booking->cod_amount }}</td>
                 </tr>
                 <tr>
+                    <th>COD Amount</th>
+                    <td>{{ $booking->cod_amount }}</td>
                     <th>Remark</th>
-                    <td colspan="3">{{ $booking->remark }}</td>
+                    <td>{{ $booking->remark ?? '-' }}</td>
                 </tr>
             </table>
 
             <strong>Parcels / Items:</strong>
-            @if($booking->items->count() > 0)
-            <table>
-                <thead>
-                    <tr>
-                        <th>Tracking No</th>
-                        <th>Receiver Name</th>
-                        <th>Address</th>
-                        <th>Pieces</th>
-                        <th>Weight</th>
-                        <th>Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($booking->items as $item)
-                    <tr>
-                        <td>{{ $item->tracking_no }}</td>
-                        <td>{{ $item->receiver_name }}</td>
-                        <td>{{ $item->address }}</td>
-                        <td>{{ $item->pcs }}</td>
-                        <td>{{ $item->weight }}</td>
-                        <td>{{ $item->amount }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            @if ($booking->items->count() > 0)
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tracking No</th>
+                            <th>Receiver Name</th>
+                            <th>Address</th>
+                            <th>Pieces</th>
+                            <th>Weight</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($booking->items as $item)
+                            <tr>
+                                <td>{{ $item->tracking_no }}</td>
+                                <td>{{ $item->receiver_name }}</td>
+                                <td>{{ $item->address }}</td>
+                                <td>{{ $item->pcs }}</td>
+                                <td>{{ $item->weight }}</td>
+                                <td>{{ $item->amount }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
 
-            <!-- Separator line after parcels -->
-            <hr style="border: 1px solid #000; margin: 20px 0;" />
-
+                <!-- Separator line after parcels -->
+                <hr style="border: 1px solid #000; margin: 20px 0;" />
             @else
                 <p>No parcels found for this booking.</p>
             @endif
@@ -182,4 +170,5 @@
     @endforelse
 
 </body>
+
 </html>

@@ -15,7 +15,7 @@ class FastBooking extends Model
         'booking_no',
         'from_branch_id',
         'to_branch_id',
-        'network_id',
+        'network',
         'payment_type',
         'slip_no',
         'total_pcs',
@@ -25,6 +25,8 @@ class FastBooking extends Model
         'remark',
         'forwarding_no',
         'eway_bill_no',
+        'city',
+        'state',
     ];
 
     // Relation: ek booking ke multiple items ho sakte hain

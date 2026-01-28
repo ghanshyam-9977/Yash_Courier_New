@@ -10,7 +10,7 @@ class ConsignmentStatusHistory extends Model
 {
     use HasFactory;
 
-    protected $table = 'consignment_status_histories';
+    protected $table = 'consignment_status_history';
 
     protected $fillable = [
         'tracking_number',

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('booking_no')->unique();
             $table->unsignedBigInteger('from_branch_id');
             $table->unsignedBigInteger('to_branch_id');
-            $table->unsignedBigInteger('network_id')->nullable();
+            $table->string('network')->nullable();
             $table->enum('payment_type', ['CASH', 'ONLINE', 'COD', 'SLIP']);
             $table->string('slip_no')->nullable();
             $table->integer('total_pcs')->default(0);
