@@ -9,12 +9,17 @@ use App\Models\Backend\HubPayment;
 use App\Repositories\HubPaymentRequest\HubPaymentRequestInterface;
 use App\Repositories\HubManage\HubPayment\HubPaymentInterface;
 use App\Enums\ApprovalStatus;
+<<<<<<< HEAD
 use App\Models\Backend\FastBooking;
 use App\Models\Backend\FastBookingItem;
 use App\Models\BranchPaymentGet;
 use Illuminate\Http\Request;
 use App\Models\BranchPaymentRequest;
 use App\Models\ConsignmentStatusHistory;
+=======
+use Illuminate\Http\Request;
+use App\Models\BranchPaymentRequest;
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Support\Facades\Log;
 
@@ -180,6 +185,7 @@ class HubPaymentRequestController extends Controller
     public function branch_create()
     {
         $branches = Hub::all();
+<<<<<<< HEAD
         return view('backend.hub_panel.hub_payment_request.branch_create', compact(var_name: 'branches'));
     }
     // public function ledger_index()
@@ -274,6 +280,10 @@ class HubPaymentRequestController extends Controller
     }
 
 
+=======
+        return view('backend.hub_panel.hub_payment_request.branch_create', compact('branches'));
+    }
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 
 
 
@@ -330,6 +340,7 @@ class HubPaymentRequestController extends Controller
 
             $validated = $request->validate([
                 'request_type' => 'required|in:in,out',
+<<<<<<< HEAD
                 'item_type' => '|string',
                 'tracking_number' => 'required|string',
                 'manifest_no' => '|string',
@@ -339,12 +350,24 @@ class HubPaymentRequestController extends Controller
                 'unit' => '|string',
                 'quantity' => '|numeric|min:0',
                 'amount' => '|numeric|min:0',
+=======
+                'item_type' => 'required|string',
+                'tracking_number' => 'required|string',
+                'manifest_no' => 'required|string',
+                'from_branch_id' => 'required',
+                'to_branch_id' => 'required',
+                'transport_type' => 'required|in:by_road,by_air',
+                'unit' => 'required|string',
+                'quantity' => 'required|numeric|min:0',
+                'amount' => 'required|numeric|min:0',
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 
                 'include_gst' => 'nullable',
                 'cgst' => 'nullable|numeric|min:0|max:100',
                 'sgst' => 'nullable|numeric|min:0|max:100',
                 'igst' => 'nullable|numeric|min:0|max:100',
 
+<<<<<<< HEAD
                 'description' => '|string',
                 'vehicle_no' => '|string|max:50',
 
@@ -357,12 +380,27 @@ class HubPaymentRequestController extends Controller
 
                 'city'  => '|string|max:100',
                 'state' => '|string|max:100',
+=======
+                'description' => 'required|string',
+                'vehicle_no' => 'required|string|max:50',
+
+                'is_cod' => 'nullable',
+                'cod_amount' => $isCod ? 'required|numeric|min:0.01' : 'nullable',
+                'cod_payment_mode' => 'nullable|string|max:50',
+                'cod_remarks' => 'nullable|string',
+
+                'city'  => 'required|string|max:100',
+                'state' => 'required|string|max:100',
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
             ]);
 
             $validated['is_cod'] = $isCod ? 1 : 0;
             $validated['include_gst'] = $request->has('include_gst') ? 1 : 0;
+<<<<<<< HEAD
             $validated['is_return'] = $validated['is_return'] ?? 0;
 
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 
             if (!$validated['is_cod']) {
                 $validated['cod_amount'] = null;
@@ -370,6 +408,7 @@ class HubPaymentRequestController extends Controller
                 $validated['cod_remarks'] = null;
             }
 
+<<<<<<< HEAD
             if (!$validated['is_return']) {
                 $validated['return_reason'] = null;
                 $validated['return_remarks'] = null;
@@ -383,6 +422,8 @@ class HubPaymentRequestController extends Controller
                 $validated['include_gst'] = 0;
             }
 
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
             if ($validated['include_gst']) {
                 $amount = (float) $request->amount;
                 $cgst = (float) ($request->cgst ?? 0);
@@ -404,6 +445,7 @@ class HubPaymentRequestController extends Controller
             // GENERATE UNIQUE MANIFEST NO
             // $validated['manifest_no'] = $this->generateManifestNo($validated['request_type']);
 
+<<<<<<< HEAD
             $bpr = BranchPaymentRequest::create($validated);
             if ($validated['request_type'] === 'out') {
                 ConsignmentStatusHistory::create([
@@ -426,6 +468,9 @@ class HubPaymentRequestController extends Controller
             }
 
 
+=======
+            BranchPaymentRequest::create($validated);
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 
             if ($request->ajax()) {
                 return response()->json([
@@ -590,7 +635,11 @@ class HubPaymentRequestController extends Controller
     {
         try {
             $itemType = $request->input('item_type');         // 'document' or 'parcel'
+<<<<<<< HEAD
             $transportType = $request->input('transport_type'); // Ye ab  hai
+=======
+            $transportType = $request->input('transport_type'); // Ye ab required hai
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 
             if (!$itemType || !$transportType) {
                 return response()->json([
@@ -636,6 +685,7 @@ class HubPaymentRequestController extends Controller
         }
     }
 
+<<<<<<< HEAD
     // public function getRequestByTracking($tracking)
     // {
     //     try {
@@ -761,11 +811,71 @@ class HubPaymentRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()
+=======
+    public function getRequestByTracking($tracking)
+    {
+        try {
+            // Find the OUT request by tracking number
+            $request = BranchPaymentRequest::where('tracking_number', $tracking)
+                ->where('request_type', 'out')
+                ->first();
+
+
+            Log::info('Active data', [
+                'data' => $request
+            ]);
+
+            if (!$request) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tracking number not found or not an OUT request'
+                ], 404);
+            }
+
+            // Get branch details for city and state
+            $fromBranch = hub::find($request->from_branch_id);
+            $toBranch = BranchPaymentRequest::find($request->to_branch_id);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'tracking_number' => $request->tracking_number,
+                    'from_branch_id' => $request->from_branch_id,
+                    'from_branch_name' => $fromBranch ? $fromBranch->name : null,
+                    'to_branch_id' => $request->to_branch_id,
+                    'to_branch_name' => $toBranch ? $toBranch->name : null,
+                    // 'city' => $request->city,
+                    'city' => $fromBranch->city,
+                    'state' => $fromBranch->state,
+                    'item_type' => $request->item_type,
+                    'transport_type' => $request->transport_type,
+                    'unit' => $request->unit,
+                    'quantity' => $request->quantity,
+                    'amount' => $request->amount,
+                    'cgst' => $request->cgst,
+                    'vehicle_no' => $request->vehicle_no,
+                    'sgst' => $request->sgst,
+                    'description' => $request->description,
+                    'include_gst' => !empty($request->cgst) || !empty($request->sgst),
+                    'is_cod' => $request->is_cod,
+                    'cod_amount' => $request->cod_amount,
+                    'cod_payment_mode' => $request->cod_payment_mode,
+                    'cod_remarks' => $request->cod_remarks,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching tracking details: ' . $e->getMessage()
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
             ], 500);
         }
     }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
     public function getAllBranches()
     {
         $branches = Hub::where('status', 'active')->get(['id', 'name', 'city', 'state']);
@@ -777,8 +887,11 @@ class HubPaymentRequestController extends Controller
     }
 
 
+<<<<<<< HEAD
     public function tracking_data() {}
 
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
     public function getStateByCity(Request $request)
     {
         $cityInput = trim($request->query('city'));

@@ -8,7 +8,10 @@ use App\Exports\HubExport;
 use App\Http\Controllers\Controller;
 use App\Models\Backend\DeliveryMan;
 use App\Models\Backend\Hub;
+<<<<<<< HEAD
 use App\Models\ConsignmentStatusHistory;
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -21,18 +24,27 @@ use App\Models\Backend\FastBookingItem;
 use App\Models\Backend\Parcel;
 use App\Repositories\Hub\HubInterface;
 use App\Models\BranchPaymentGet;
+<<<<<<< HEAD
 use App\Models\BranchPaymentRequest;
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 use App\Repositories\HubManage\HubPayment\HubPaymentInterface;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+<<<<<<< HEAD
 use League\Config\Exception\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException as ValidatorsValidationException;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 
 
+=======
+use Maatwebsite\Excel\Facades\Excel;
+use Picqer\Barcode\BarcodeGeneratorPNG;
+
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 class HubController extends Controller
 {
     protected $repo;
@@ -86,10 +98,13 @@ class HubController extends Controller
             ->orderBy('id', 'desc')
             ->paginate(10);
 
+<<<<<<< HEAD
         // logger('data', [
         //     'drsEntries' => $drsEntries
         // ]);
 
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
         return view('backend.drs.drs', compact('drsEntries', 'request'));
     }
 
@@ -151,6 +166,7 @@ class HubController extends Controller
     public function fastbooking_store(Request $request)
     {
         $request->validate([
+<<<<<<< HEAD
             'booking_no'                 => 'nullable|string|max:50',
             'from_branch_id'             => 'nullable|exists:hubs,id',
             // 'to_branch_id'               => 'nullable|exists:hubs,id',
@@ -170,6 +186,23 @@ class HubController extends Controller
         DB::beginTransaction();
         $bookingNo = 'FB' . now()->format('Ymd') . rand(1000, 9999);
 
+=======
+            'booking_no'                 => 'required',
+            'from_branch_id'             => 'required',
+            'to_branch_id'               => 'required',
+            'network'                    => 'required',
+            'payment_type'               => 'required',
+
+            'items.tracking_no.*'        => 'required|distinct|unique:fast_booking_items,tracking_no',
+            'items.receiver_name.*'      => 'required',
+            'items.address.*'            => 'required',
+            'items.pcs.*'                => 'required|integer|min:1',
+            'items.weight.*'             => 'required|numeric|min:0.01',
+            'items.amount.*'             => 'required|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 
         try {
 
@@ -180,6 +213,7 @@ class HubController extends Controller
 
             /* ---------- FAST BOOKING (MASTER) ---------- */
             $booking = FastBooking::create([
+<<<<<<< HEAD
                 'booking_no'     => $bookingNo,
                 'from_branch_id' => $request->from_branch_id,
                 'city' => $request->city,
@@ -190,6 +224,13 @@ class HubController extends Controller
                 'payment_type'   => $request->payment_type,
                 'forwarding_no'  => $request->forwarding_no,
                 'eway_bill_no'   => $request->eway_bill_no,
+=======
+                'booking_no'     => $request->booking_no,
+                'from_branch_id' => $request->from_branch_id,
+                'to_branch_id'   => $request->to_branch_id,
+                'network'        => $request->network,
+                'payment_type'   => $request->payment_type,
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                 'slip_no'        => $request->slip_no,
                 'total_pcs'      => $totalPcs,
                 'total_weight'   => $totalWeight,
@@ -212,6 +253,7 @@ class HubController extends Controller
 
             DB::commit();
 
+<<<<<<< HEAD
             foreach ($request->items['tracking_no'] as $trackingNo) {
                 ConsignmentStatusHistory::create([
                     'tracking_number' => $trackingNo,
@@ -222,6 +264,8 @@ class HubController extends Controller
                 ]);
             }
 
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
             return response()->json([
                 'success'  => true,
                 'message'  => 'Fast Booking created successfully',
@@ -239,6 +283,7 @@ class HubController extends Controller
     }
 
 
+<<<<<<< HEAD
     public function fastbooking_update(Request $request, $id)
     {
         $request->validate([
@@ -320,6 +365,8 @@ class HubController extends Controller
 
 
 
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 
     public function fastbooking_edit($id)
     {
@@ -339,9 +386,72 @@ class HubController extends Controller
         return view('backend.fastbooking.create', compact('booking', 'branches', 'networks'));
     }
 
+<<<<<<< HEAD
 
 
 
+=======
+    public function fastbooking_update(Request $request, $id)
+    {
+        $request->validate([
+            'tracking_no'   => 'required', // edit me unique nahi
+            'from_station'  => 'required',
+            'network'       => 'required',
+            'receiver_name' => 'required',
+            'address'       => 'required',
+            'pieces'        => 'required|integer',
+            'weight'        => 'required|numeric',
+            'paid_amount'   => 'required|numeric',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+
+            // 🔹 MASTER BOOKING
+            $booking = FastBooking::findOrFail($id);
+
+            $booking->update([
+                'from_branch_id' => 5, // abhi demo
+                'to_branch_id'   => 6,
+                'network_id'     => null,
+                'payment_type'   => ($request->cod_amount > 0) ? 'COD' : 'CASH',
+                'total_pcs'      => $request->pieces,
+                'total_weight'   => $request->weight,
+                'total_amount'   => $request->paid_amount,
+                'cod_amount'     => $request->cod_amount ?? 0,
+                'remark'         => $request->remark,
+            ]);
+
+            // 🔹 ITEM (single tracking)
+            $item = FastBookingItem::where('fast_booking_id', $booking->id)->firstOrFail();
+
+            $item->update([
+                // tracking_no edit me readonly hai isliye update nahi
+                'receiver_name' => $request->receiver_name,
+                'address'       => $request->address,
+                'pcs'           => $request->pieces,
+                'weight'        => $request->weight,
+                'amount'        => $request->paid_amount,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'Fast Booking updated successfully',
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status'  => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 
     public function fastbooking_view(Request $request) {}
 
@@ -367,6 +477,7 @@ class HubController extends Controller
 
     public function printShipper()
     {
+<<<<<<< HEAD
         $bookingsData = FastBooking::with(['items', 'fromHub'])->get();
 
         logger('latest', [
@@ -383,6 +494,17 @@ class HubController extends Controller
     {
         // ✅ fast booking ke saath parent data load
         $fastBookings = FastBookingItem::with('fastBooking')->get();
+=======
+        // Fetch data, prepare print view for shipper
+        $fastBookings = FastBooking::paginate(20); // ya apne hisaab se
+        return view('fast_bookings.print_shipper', compact('fastBookings'));
+    }
+
+
+    public function printSticker()
+    {
+        $fastBookings = FastBookingItem::all();
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 
         $generator = new BarcodeGeneratorPNG();
 
@@ -400,7 +522,11 @@ class HubController extends Controller
             Storage::disk('public')->put($fileName, $barcodeData);
 
             $booking->barcode_image = $fileName;
+<<<<<<< HEAD
             // $booking->save(); // agar DB me save karna ho
+=======
+            // $booking->save();
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
         }
 
         return view('backend.fastbooking.print_sticker', compact('fastBookings'));
@@ -448,6 +574,7 @@ class HubController extends Controller
                     'receiver_name'  => $shipment['receiver_name'],
                     'address'        => $shipment['area'], // Assuming area as address for now
                 ]);
+<<<<<<< HEAD
                 ConsignmentStatusHistory::create([
                     'tracking_number' => $shipment['tracking_no'],
                     'status' => 'out_for_delivery',
@@ -455,6 +582,8 @@ class HubController extends Controller
                     'drs_id' => $drs->id,
                     'branch_id' => $shipment['area'],
                 ]);
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
             }
 
             DB::commit();
@@ -522,6 +651,7 @@ class HubController extends Controller
     public function drs_update(Request $request, $id)
     {
         $request->validate([
+<<<<<<< HEAD
             'drs_status'        => 'required|in:out_for_delivery,delivered,undelivered',
             'delivery_date'     => 'nullable|date',
             'remarks'           => 'nullable|string|max:255',
@@ -594,6 +724,27 @@ class HubController extends Controller
             ->with('success', 'DRS updated and tracking history added successfully');
     }
 
+=======
+            'drs_status'    => 'required|in:out_for_delivery,delivered,undelivered',
+            'delivery_date' => 'nullable|date',
+            'remarks'       => 'nullable|string|max:255',
+        ]);
+
+        $drs = DrsEntry::findOrFail($id);
+
+        $drs->drs_status    = $request->drs_status;
+        $drs->delivery_date = $request->delivery_date ?? Carbon::now()->toDateString();
+        $drs->remarks       = $request->remarks;
+        $drs->updated_by    = auth()->id(); // login user
+        $drs->is_closed     = ($request->drs_status == 'delivered') ? 1 : 0;
+
+        $drs->save();
+
+        return redirect()
+            ->route('drs.index')
+            ->with('success', 'DRS updated successfully');
+    }
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
     public function drs_remove()
     {
         // return view('backend.drs.create');
@@ -1101,6 +1252,7 @@ class HubController extends Controller
 
         return response()->json($data);
     }
+<<<<<<< HEAD
 
     public function tracking_index(Request $request)
     {
@@ -1403,4 +1555,6 @@ class HubController extends Controller
             compact('consignment', 'trackingHistory', 'currentStatus', 'source')
         );
     }
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 }

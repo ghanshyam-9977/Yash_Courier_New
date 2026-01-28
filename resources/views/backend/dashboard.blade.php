@@ -8,7 +8,11 @@
         <!-- pageheader  -->
         <div class="row">
             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+<<<<<<< HEAD
                 {{-- <div class="page-header">
+=======
+                <div class="page-header">
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                     <div class="page-breadcrumb">
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
@@ -19,6 +23,7 @@
                             </ol>
                         </nav>
                     </div>
+<<<<<<< HEAD
                 </div> --}}
                 <div class="page-header d-flex justify-content-between align-items-center">
                     <div class="page-breadcrumb">
@@ -43,6 +48,9 @@
                     </div>
                 </div>
 
+=======
+                </div>
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
             </div>
         </div>
         <!-- end pageheader  -->
@@ -61,7 +69,11 @@
 
                 </div>
             </div>
+<<<<<<< HEAD
             <div class="row header-summery">
+=======
+            <div class="row header-summery"> 
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 
 
                 @if (hasPermission('total_parcel') == true)
@@ -391,8 +403,13 @@
     <!-- Tempus Dominus Styles -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/eonasdan-bootstrap-datetimepicker/4.17.49/css/bootstrap-datetimepicker.min.css"
+<<<<<<< HEAD
         integrity="sha512-ipfmbgqfdejR27dWn02UftaAzUfxJ3HR4BDQYuITYSj6ZQfGT1NulP4BOery3w/dT2PYAe3bG5Zm/owm7MuFhA=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
+=======
+        integrity="sha512-ipfmbgqfdejR27dWn02UftaAzUfxJ3HR4BDQYuITYSj6ZQfGT1NulP4BOery3w/dT2PYAe3bG5Zm/owm7MuFhA==" crossorigin="anonymous"
+        referrerpolicy="no-referrer" />
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
     <style>
         .notification .nav-link.nav-icons {
             margin-top: 0px !important;

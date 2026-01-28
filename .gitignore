@@ -19,5 +19,9 @@ npm-debug.log
 yarn-error.log
 /.fleet
 /.idea
+<<<<<<< HEAD
 /.vscode
 Yash_Courier_New/
+=======
+/.vscode
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850

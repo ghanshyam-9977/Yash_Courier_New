@@ -162,14 +162,22 @@ return [
 
          Maatwebsite\Excel\ExcelServiceProvider::class,
          RealRashid\SweetAlert\SweetAlertServiceProvider::class,
+<<<<<<< HEAD
          // Barryvdh\Debugbar\ServiceProvider::class,
+=======
+         Barryvdh\Debugbar\ServiceProvider::class,
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
          Milon\Barcode\BarcodeServiceProvider::class, 
          Brian2694\Toastr\ToastrServiceProvider::class,
          Cartalyst\Stripe\Laravel\StripeServiceProvider::class ,
          Srmklive\PayPal\Providers\PayPalServiceProvider::class,
          // Anand\LaravelPaytmWallet\PaytmWalletServiceProvider::class,
          Obydul\LaraSkrill\LaraSkrillServiceProvider::class,
+<<<<<<< HEAD
          Illuminate\View\ViewServiceProvider::class,
+=======
+
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
          
         /*
          * Application Service Providers...
@@ -197,7 +205,11 @@ return [
         // 'Example' => App\Facades\Example::class,
 
         'Alert' => RealRashid\SweetAlert\Facades\Alert::class,
+<<<<<<< HEAD
         // 'Debugbar' => Barryvdh\Debugbar\Facades\Debugbar::class,
+=======
+        'Debugbar' => Barryvdh\Debugbar\Facades\Debugbar::class,
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
         'DNS1D' => Milon\Barcode\Facades\DNS1DFacade::class,
         'DNS2D' => Milon\Barcode\Facades\DNS2DFacade::class,
         'Toastr'  => Brian2694\Toastr\Facades\Toastr::class,

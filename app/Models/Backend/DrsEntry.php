@@ -37,12 +37,20 @@ class DrsEntry extends Model
     {
         return $this->hasOne(
             DeliveryMan::class,
+<<<<<<< HEAD
             'id',               // delivery_man.id (foreign key in delivery_man table)
             'delivery_boy_id'   // drs_entries.delivery_boy_id (local key in current model)
         );
     }
 
 
+=======
+            'user_id',          // delivery_man.user_id
+            'delivery_boy_id'   // drs_entries.delivery_boy_id
+        );
+    }
+
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
     // Assuming DrsEntry belongs to a Branch
     public function branch()
     {

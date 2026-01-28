@@ -15,7 +15,11 @@ class FastBooking extends Model
         'booking_no',
         'from_branch_id',
         'to_branch_id',
+<<<<<<< HEAD
         'network',
+=======
+        'network_id',
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
         'payment_type',
         'slip_no',
         'total_pcs',
@@ -23,10 +27,13 @@ class FastBooking extends Model
         'total_amount',
         'cod_amount',
         'remark',
+<<<<<<< HEAD
         'forwarding_no',
         'eway_bill_no',
         'city',
         'state',
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
     ];
 
     // Relation: ek booking ke multiple items ho sakte hain
@@ -45,6 +52,7 @@ class FastBooking extends Model
     {
         return $this->belongsTo(Hub::class, 'to_branch_id');
     }
+<<<<<<< HEAD
 
     public function fromHub()
     {
@@ -55,4 +63,6 @@ class FastBooking extends Model
     {
         return $this->belongsTo(Hub::class, 'to_branch_id', 'id');
     }
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 }

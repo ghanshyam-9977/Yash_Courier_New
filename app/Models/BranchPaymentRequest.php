@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+<<<<<<< HEAD
 use App\Models\Backend\Branch;
 use App\Models\Backend\Hub;
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -38,6 +41,7 @@ class BranchPaymentRequest extends Model
 
     ];
 
+<<<<<<< HEAD
    
 
     public function fromHub()
@@ -48,5 +52,19 @@ class BranchPaymentRequest extends Model
     public function toHub()
     {
         return $this->belongsTo(Hub::class, 'to_branch_id', 'id');
+=======
+    public function fromBranch()
+    {
+        return $this->belongsTo(BranchPaymentRequest::class, 'from_branch_id');
+    }
+
+    // public function toBranch()
+    // {
+    //     return $this->belongsTo(Branch::class, 'to_branch_id');
+    // }
+    public function toBranch()
+    {
+        return $this->belongsTo(BranchPaymentRequest::class, 'to_branch_id');
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
     }
 }

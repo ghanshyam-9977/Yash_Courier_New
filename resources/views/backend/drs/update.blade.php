@@ -109,10 +109,17 @@
                             </div>
 
                             <div class="col-md-8">
+<<<<<<< HEAD
                                 <label class="form-label">Scan Tracking No</label>
                                 <input type="text" class="form-control"
                                     name="scan_tracking_no"
                                     value="{{ old('scan_tracking_no', $drs->scan_tracking_no) }}">
+=======
+                                <label class="form-label">Scam Tracking No</label>
+                                <input type="text" class="form-control"
+                                    name="scam_tracking_no"
+                                    value="{{ old('scam_tracking_no', $drs->scam_tracking_no) }}">
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                             </div>
                         </div>
 

@@ -32,9 +32,12 @@ class DrsShipment extends Model
     {
         return $this->belongsTo(DrsEntry::class, 'drs_entry_id');
     }
+<<<<<<< HEAD
 
     public function drsEntry()
     {
         return $this->belongsTo(DrsEntry::class, 'drs_entry_id', 'id');
     }
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 }

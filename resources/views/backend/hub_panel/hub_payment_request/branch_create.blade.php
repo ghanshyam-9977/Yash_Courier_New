@@ -33,8 +33,12 @@
                     </div>
 
                     <div class="card-body">
+<<<<<<< HEAD
                         <form action="{{ route('hub-panel.payment-request.store_branch') }}" method="POST"
                             id="branch-payment-form">
+=======
+                        <form action="{{ route('hub-panel.payment-request.store_branch') }}" method="POST" id="branch-payment-form">
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                             @csrf
 
                             <!-- Request Type Selection -->
@@ -43,14 +47,22 @@
                                 <div class="mt-2">
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="type_out" name="request_type" value="out"
+<<<<<<< HEAD
                                             class="custom-control-input" {{ old('request_type') == 'out' ? 'checked' : '' }}
                                             required>
+=======
+                                            class="custom-control-input" {{ old('request_type') == 'out' ? 'checked' : '' }} required>
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                                         <label class="custom-control-label" for="type_out">OUT</label>
                                     </div>
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="type_in" name="request_type" value="in"
+<<<<<<< HEAD
                                             class="custom-control-input" {{ old('request_type') == 'in' ? 'checked' : '' }}
                                             required>
+=======
+                                            class="custom-control-input" {{ old('request_type') == 'in' ? 'checked' : '' }} required>
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                                         <label class="custom-control-label" for="type_in">IN</label>
                                     </div>
                                 </div>
@@ -63,7 +75,11 @@
                             <div class="form-group" id="manifest-container" style="display:none;">
                                 <label for="manifest_no">Manifest No <span class="text-danger">*</span></label>
                                 <input type="text" id="manifest_no" name="manifest_no" class="form-control"
+<<<<<<< HEAD
                                     placeholder="Enter manifest number" value="{{ old('manifest_no') }}" >
+=======
+                                    placeholder="Enter manifest number" value="{{ old('manifest_no') }}" required>
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                                 <small class="form-text text-muted">Enter the manifest number for this request</small>
                                 @error('manifest_no')
                                     <small class="text-danger">{{ $message }}</small>
@@ -76,7 +92,11 @@
                                 <label for="vehicle_number" id="vehicle-label">Vehicle No<span
                                         class="text-danger">*</span></label>
                                 <input type="text" id="vehicle_number" name="vehicle_no" class="form-control"
+<<<<<<< HEAD
                                     placeholder="Enter vehicle number" value="{{ old('vehicle_no') }}">
+=======
+                                    placeholder="Enter vehicle number" value="{{ old('vehicle_no') }}" required>
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                                 <small class="form-text text-muted" id="vehicle-hint"></small>
                             </div>
 
@@ -146,20 +166,32 @@
                                 <div class="mt-2">
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="item_document" name="item_type" value="document"
+<<<<<<< HEAD
                                             class="custom-control-input"
                                             {{ old('item_type') == 'document' ? 'checked' : '' }} >
+=======
+                                            class="custom-control-input" {{ old('item_type') == 'document' ? 'checked' : '' }} required>
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                                         <label class="custom-control-label" for="item_document">Document</label>
                                     </div>
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="item_parcel" name="item_type" value="parcel"
+<<<<<<< HEAD
                                             class="custom-control-input"
                                             {{ old('item_type') == 'parcel' ? 'checked' : '' }} >
+=======
+                                            class="custom-control-input" {{ old('item_type') == 'parcel' ? 'checked' : '' }} required>
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                                         <label class="custom-control-label" for="item_parcel">Parcel</label>
                                     </div>
                                     <div class="custom-control custom-radio custom-control-inline">
                                         <input type="radio" id="item_urgent" name="item_type" value="urgent"
+<<<<<<< HEAD
                                             class="custom-control-input"
                                             {{ old('item_type') == 'urgent' ? 'checked' : '' }} >
+=======
+                                            class="custom-control-input" {{ old('item_type') == 'urgent' ? 'checked' : '' }} required>
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                                         <label class="custom-control-label" for="item_urgent">Urgent</label>
                                     </div>
                                 </div>
@@ -168,6 +200,7 @@
                                 @enderror
                             </div>
 
+<<<<<<< HEAD
 
                             <div class="form-group" id="return-container" style="display:none;">
                                 <div class="custom-control custom-checkbox mb-3">
@@ -224,12 +257,18 @@
                                 </div>
                             </div>
 
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                             <!-- Transport Type -->
                             <div class="form-group" id="transport-type-container" style="display:none;">
                                 <label for="transport_type">{{ __('Transport Type') }} <span
                                         class="text-danger">*</span></label>
                                 <select name="transport_type" id="transport_type"
+<<<<<<< HEAD
                                     class="form-control @error('transport_type') is-invalid @enderror">
+=======
+                                    class="form-control @error('transport_type') is-invalid @enderror" required>
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                                     <option value="">{{ __('Select Transport Type') }}</option>
                                     <option value="by_road" {{ old('transport_type') == 'by_road' ? 'selected' : '' }}>
                                         {{ __('By Road') }}
@@ -248,8 +287,12 @@
                                 <label for="tracking_number" id="tracking-label">Tracking / Consignment No <span
                                         class="text-danger">*</span></label>
                                 <input type="text" id="tracking_number" name="tracking_number" class="form-control"
+<<<<<<< HEAD
                                     placeholder="Enter or auto-generated tracking number"
                                     value="{{ old('tracking_number') }}" required>
+=======
+                                    placeholder="Enter or auto-generated tracking number" value="{{ old('tracking_number') }}" required>
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                                 <small class="form-text text-muted" id="tracking-hint"></small>
                             </div>
 
@@ -263,10 +306,15 @@
                                             placeholder="Type city name (e.g. Indore, Delhi...)" autocomplete="off"
                                             value="{{ old('city') }}" required>
 
+<<<<<<< HEAD
                                         <input type="hidden" name="city" id="city-hidden"
                                             value="{{ old('city') }}">
                                         <input type="hidden" name="state" id="state-hidden"
                                             value="{{ old('state') }}">
+=======
+                                        <input type="hidden" name="city" id="city-hidden" value="{{ old('city') }}">
+                                        <input type="hidden" name="state" id="state-hidden" value="{{ old('state') }}">
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 
                                         <small class="form-text text-muted">Start typing to see suggestions...</small>
 
@@ -283,8 +331,12 @@
                                     <div class="form-group">
                                         <label for="state-display">State <span class="text-danger">*</span></label>
                                         <input type="text" id="state-display" class="form-control" readonly>
+<<<<<<< HEAD
                                         <input type="hidden" name="state" id="state-hidden-value"
                                             value="{{ old('state') }}">
+=======
+                                        <input type="hidden" name="state" id="state-hidden-value" value="{{ old('state') }}">
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                                     </div>
                                 </div>
                             </div>
@@ -296,6 +348,7 @@
                                         <select id="unit" name="unit"
                                             class="form-control @error('unit') is-invalid @enderror" required>
                                             <option value="">Select Unit</option>
+<<<<<<< HEAD
                                             <option value="kg" {{ old('unit') == 'kg' ? 'selected' : '' }}>
                                                 Kilogram
                                                 (kg)</option>
@@ -307,6 +360,15 @@
                                                 (L)</option>
                                             <option value="ml" {{ old('unit') == 'ml' ? 'selected' : '' }}>
                                                 Milliliter
+=======
+                                            <option value="kg" {{ old('unit') == 'kg' ? 'selected' : '' }}>Kilogram
+                                                (kg)</option>
+                                            <option value="gram" {{ old('unit') == 'gram' ? 'selected' : '' }}>Gram (g)
+                                            </option>
+                                            <option value="liter" {{ old('unit') == 'liter' ? 'selected' : '' }}>Liter
+                                                (L)</option>
+                                            <option value="ml" {{ old('unit') == 'ml' ? 'selected' : '' }}>Milliliter
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                                                 (ml)</option>
                                         </select>
                                         @error('unit')
@@ -334,7 +396,11 @@
                                         class="text-danger">*</span></label>
                                 <input type="number" step="0.01" id="amount" name="amount"
                                     class="form-control @error('amount') is-invalid @enderror"
+<<<<<<< HEAD
                                     placeholder="{{ __('Enter Amount') }}" value="{{ old('amount') }}">
+=======
+                                    placeholder="{{ __('Enter Amount') }}" value="{{ old('amount') }}" required>
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                                 @error('amount')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
@@ -435,8 +501,12 @@
                                                     class="form-control">
                                                     <option value="">Any Mode</option>
                                                     <option value="cash"
+<<<<<<< HEAD
                                                         {{ old('cod_payment_mode') == 'cash' ? 'selected' : '' }}>Cash
                                                         Only
+=======
+                                                        {{ old('cod_payment_mode') == 'cash' ? 'selected' : '' }}>Cash Only
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                                                     </option>
                                                     <option value="upi"
                                                         {{ old('cod_payment_mode') == 'upi' ? 'selected' : '' }}>UPI
@@ -445,8 +515,12 @@
                                                         {{ old('cod_payment_mode') == 'card' ? 'selected' : '' }}>Card
                                                     </option>
                                                     <option value="online"
+<<<<<<< HEAD
                                                         {{ old('cod_payment_mode') == 'online' ? 'selected' : '' }}>
                                                         Online
+=======
+                                                        {{ old('cod_payment_mode') == 'online' ? 'selected' : '' }}>Online
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                                                         Transfer</option>
                                                 </select>
                                             </div>
@@ -555,7 +629,10 @@
                 $('#transport-type-container').show();
                 $('#tracking-container').show();
                 $('#vehicle-container').show();
+<<<<<<< HEAD
                 $('#return-container').show();
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                 $('#tracking-label').html('Tracking / Consignment No <span class="text-danger">*</span>');
                 $('#vehicle-label').html('Vehicle No <span class="text-danger">*</span>');
                 $('#tracking-hint').text('Auto-generated tracking number');
@@ -580,7 +657,10 @@
                 $('#transport-type-container').show();
                 $('#tracking-container').show();
                 $('#vehicle-container').show();
+<<<<<<< HEAD
                 $('#return-container').show();
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                 $('#tracking-label').html('Tracking / Consignment No <span class="text-danger">*</span>');
                 $('#vehicle-label').html('Vehicle No <span class="text-danger">*</span>');
                 $('#tracking_number').prop('', false).val('');
@@ -596,6 +676,36 @@
                 $('#cod-container').show();
             }
 
+<<<<<<< HEAD
+=======
+            // ========== OUT REQUEST HANDLERS ==========
+
+            // From Branch Change (OUT)
+            // $('#from_branch_select').on('change', function() {
+            //     const selectedOption = $(this).find('option:selected');
+            //     const branchId = $(this).val();
+            //     const city = selectedOption.data('city');
+            //     const state = selectedOption.data('state');
+
+            //     if (currentRequestType === 'out' && branchId) {
+            //         // Auto-fill city and state
+            //         if (city) $('#city').val(city);
+            //         if (state) $('#state').val(state);
+
+            //         // Generate tracking number
+            //         generateTrackingNumber();
+
+            //         // Fetch rates if all required fields are selected
+            //         const itemType = $('input[name="item_type"]:checked').val();
+            //         const transportType = $('#transport_type').val();
+
+            //         if (itemType && transportType) {
+            //             fetchOutRates(branchId, itemType, transportType);
+            //         }
+            //     }
+            // });
+
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 
             // City input par state fetch karne ke liye
             // City input handler - Updated for multiple states
@@ -866,7 +976,11 @@
                             if (response.data.is_cod) {
                                 $('#is_cod').prop('checked', true);
                                 $('#cod-fields').show();
+<<<<<<< HEAD
                                 $('#cod_amount').val(response.data.cod_amount || '').attr('',
+=======
+                                $('#cod_amount').val(response.data.cod_amount || '').attr('required',
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                                     'required');
                                 $('#cod_payment_mode').val(response.data.cod_payment_mode || '');
                                 $('#cod_remarks').val(response.data.cod_remarks || '');
@@ -945,7 +1059,11 @@
                 $('#cod-fields').hide();
                 $('#cod_amount, #cod_remarks').val('');
                 $('#cod_payment_mode').val('');
+<<<<<<< HEAD
                 $('#cod_amount').removeAttr('');
+=======
+                $('#cod_amount').removeAttr('required');
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
             }
 
             // Show notification helper
@@ -963,8 +1081,12 @@
                     }
                 } else {
                     // Fallback to alert
+<<<<<<< HEAD
                     const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' :
                         'ℹ️';
+=======
+                    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                     alert(icon + ' ' + message);
                 }
             }
@@ -996,8 +1118,12 @@
                     contentType: false,
                     success: function(response) {
                         if (response.success) {
+<<<<<<< HEAD
                             showNotification('success', response.message ||
                                 'Request submitted successfully!');
+=======
+                            showNotification('success', response.message || 'Request submitted successfully!');
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                             // Form data remains filled, no reset
                         } else {
                             showNotification('error', response.message || 'An error occurred.');
@@ -1148,6 +1274,7 @@
                 $('#state-hidden-value').val('{{ old('state') }}');
             @endif
         });
+<<<<<<< HEAD
 
 
         $(document).ready(function() {
@@ -1251,5 +1378,7 @@
                 $('#include_gst').prop('disabled', true);
             @endif
         });
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
     </script>
 @endpush

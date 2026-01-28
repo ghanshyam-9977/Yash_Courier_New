@@ -114,7 +114,11 @@ use App\Http\Controllers\InstallerController;
 
 
 use App\Http\Controllers\BranchController;
+<<<<<<< HEAD
 use Illuminate\Support\Facades\Auth;
+=======
+
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
 
 //installer
 Route::middleware(['XSS', 'IsNotInstalled'])->group(function () {
@@ -132,12 +136,16 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
     //frontend
     Route::controller(FrontendController::class)->group(function () {
         Route::get('/', 'index')->name('home');
+<<<<<<< HEAD
         // Route::get('/tracking', 'tracking')->name('tracking.index');
         Route::get('/tracking', [HubController::class, 'tracking_index'])
             ->name('tracking.index');
         Route::get('/track-consignment/search', [HubController::class, 'tracking_search'])->name('hub.track.search');
 
 
+=======
+        Route::get('/tracking', 'tracking')->name('tracking.index');
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
         Route::get('/about-us', 'aboutUs')->name('aboutus.index');
         Route::get('/our-services', 'ourServices')->name('services.index');
         Route::get('/pincode-list', 'pincodeList')->name('pincode.index');
@@ -222,6 +230,7 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
                 Route::get('/drs/create', [HubController::class, 'drs_create'])->name('drs.create');
                 Route::get('/drs/get-entries', [HubController::class, 'getEntriesData'])->name('drs.get-entries');
 
+<<<<<<< HEAD
 
                 ///tacking route
 
@@ -229,6 +238,8 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
                 Route::get('/track-consignment', [HubController::class, 'drs_tracking_index'])->name('drs.tracking.index');
                 Route::get('/drs-track', [HubController::class, 'drs_tracking_record']);
                 // drs route
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                 Route::get('/drs/estimate', [HubController::class, 'drs_estimate'])->name('drs.estimate');
                 Route::get('/drs/drs-search', [HubController::class, 'estimate_data'])->name('drs.search');
                 Route::get('/drs/{id}', [HubController::class, 'drs_view'])->name('drs.show');
@@ -239,7 +250,11 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
                 Route::get('/fastbooking/create', [HubController::class, 'fastbooking_create'])->name('fast_bookings.create');
                 Route::post('/fastbooking/store', [HubController::class, 'fastbooking_store'])->name('fast_bookings.store');
                 Route::get('/fastbooking/{id}/edit', [HubController::class, 'fastbooking_edit'])->name('fast_bookings.edit');
+<<<<<<< HEAD
                 Route::put('/fastbooking/update/{id}', [HubController::class, 'fastbooking_update'])->name('fast_bookings.update');
+=======
+                Route::get('/fastbooking/update', [HubController::class, 'fastbooking_update'])->name('fast_bookings.update');
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                 Route::get('/fastbooking/{id}/view', [HubController::class, 'fastbooking_view'])->name('fast_bookings.show');
                 Route::get('/fastbooking/{id}/delete', [HubController::class, 'fastbooking_delete'])->name('fast_bookings.destroy');
                 Route::get('fast_bookings/print_shipper', [HubController::class, 'printShipper'])->name('fast_bookings.print_shipper');
@@ -307,8 +322,11 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
 
 
                 Route::get('hub/payment-request/create', [HubPaymentRequestController::class, 'branch_create'])->name('hub-panel.payment-request.create');
+<<<<<<< HEAD
                 Route::get('hub/ledger', [HubPaymentRequestController::class, 'ledger_index'])->name('ledger.index');
                 Route::get('/ledger', [HubPaymentRequestController::class, 'getByBranch']);
+=======
+>>>>>>> 47c1f9dc9f4358a9976f1341ff7c3c2ae3e15850
                 Route::get('/get-states', [HubPaymentRequestController::class, 'getStates'])->name('get.states');
                 Route::get('/get-cities', [HubPaymentRequestController::class, 'getCities'])->name('get.cities');
                 Route::get('/get-branches-by-city/{city}', [HubPaymentRequestController::class, 'getBranchesByCity'])
